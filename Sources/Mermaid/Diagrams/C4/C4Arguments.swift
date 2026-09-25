@@ -52,7 +52,12 @@ struct C4Arguments: Sendable {
                 return C4Arguments(arguments: arguments, location: location)
             }
             arguments.append(try argument(&scanner, callStart: location))
-            scanner.skipWhitespace(newlines: true)
+            var probe = scanner
+            probe.skipWhitespace(newlines: true)
+            if scanner.peek() == "\n" || probe.isAtEnd, probe.peek() != ",", probe.peek() != ")" {
+                throw MermaidError.syntax("Missing ')' to close the argument list", at: location)
+            }
+            scanner = probe
             if scanner.consume(",") {
                 // A trailing comma before `)` leaves an empty final argument.
                 var probe = scanner
