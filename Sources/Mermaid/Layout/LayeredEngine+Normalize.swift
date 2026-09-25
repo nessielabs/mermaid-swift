@@ -29,10 +29,19 @@ extension LayeredEngine {
                 }
             }
             chain.append(arc.to)
-            // Long edges get heavier inner segments so they stay straight.
+            // Long edges get heavy inner segments so they stay straight, and
+            // the segment entering the lower node outweighs the one leaving
+            // the upper node, so edges arrive from directly above their
+            // target instead of cutting across its neighbors.
             for (a, b) in zip(chain, chain.dropFirst()) {
-                let inner = !isReal(a) && !isReal(b)
-                segments.append(Segment(upper: a, lower: b, weight: arc.weight * (inner ? 8 : isReal(a) && isReal(b) ? 1 : 2)))
+                let weight: Double
+                switch (isReal(a), isReal(b)) {
+                case (false, false): weight = 8
+                case (true, true): weight = 1
+                case (true, false): weight = 1.5
+                case (false, true): weight = 4
+                }
+                segments.append(Segment(upper: a, lower: b, weight: arc.weight * weight))
             }
             chains[arc.edge] = arc.reversed ? chain.reversed() : chain
         }
