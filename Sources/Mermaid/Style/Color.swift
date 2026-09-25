@@ -89,6 +89,7 @@ extension Color {
     /// saturation and lightness in percentage points), like khroma's
     /// `adjust`, which Mermaid themes use to derive their palettes.
     public func adjusted(hue: Double = 0, saturation: Double = 0, lightness: Double = 0) -> Color {
+        guard hue != 0 || saturation != 0 || lightness != 0 else { return self }
         let c = hsl
         return Color(hue: c.hue + hue, saturation: c.saturation + saturation / 100,
                      lightness: c.lightness + lightness / 100, alpha: alpha)
