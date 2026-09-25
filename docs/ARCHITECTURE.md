@@ -18,9 +18,9 @@ source ──▶ Preprocessor ──▶ DiagramRegistry ──▶ <Type>Parser �
 | Config | `Sources/Mermaid/Config` | front matter YAML, `%%{init}%%` directives, `ConfigValue`, `Preprocessor` |
 | Style | `Sources/Mermaid/Style` | CSS `Color`, `ElementStyle` (`style`/`classDef` declarations), `Theme` with Mermaid's five themes and derivation rules |
 | Text | `Sources/Mermaid/Text` | `LabelParser` (HTML-ish and markdown labels → `RichText`), `TextMeasurer` (CoreText or approximate), `TextBlock` (measured, wrapped lines) |
-| Scene | `Sources/Mermaid/Scene` | `Point`/`Size`/`Rect`, `Path` (move/line/cubic/close), `Scene` of shapes, text and groups |
+| Scene | `Sources/Mermaid/Scene` | `Point`/`Size`/`Rect`, `Path` (move/line/cubic/close), `Scene` of shapes (flat or linear-gradient fills), text and groups |
 | Layout | `Sources/Mermaid/Layout` | `LayeredLayout`: Sugiyama layout with clusters, labels, ports and all four directions |
-| Shared | `Sources/Mermaid/Shared` | `NodeShape` catalog and geometry, `ShapeRenderer`, `Connector` (clipped, curved edges with markers and labels), `Marker`, `Curve`, `DiagramCanvas` |
+| Shared | `Sources/Mermaid/Shared` | `NodeShape` catalog and geometry, `ShapeRenderer`, `Connector` (clipped, curved edges with markers and labels), `Marker`, `Curve`, `DiagramCanvas`, chart helpers (d3-compatible ticks and scales, anchored text, nested theme variables) |
 | Diagrams | `Sources/Mermaid/Diagrams/<Type>` | one folder per diagram type: model, parser, scene builder |
 | Render | `Sources/Mermaid/Render` | `SVGRenderer`, `CoreGraphicsRenderer`, image export, SwiftUI view |
 | API | `Sources/Mermaid/API` | `Mermaid.parse/render`, `Diagram` protocol, `RenderContext`, `DiagramRegistry` |
