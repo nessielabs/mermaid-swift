@@ -1,3 +1,6 @@
+import Foundation
+
+
 /// One logical line of diagram source, with its original line number.
 struct SourceLine: Hashable, Sendable {
     /// The 1-based line number in the original source.
