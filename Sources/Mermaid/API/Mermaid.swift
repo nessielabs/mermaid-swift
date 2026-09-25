@@ -111,6 +111,7 @@ struct DiagramRegistry {
         Entry(type: .quadrantChart, keywords: ["quadrantChart"]) { try QuadrantChartParser.parse($0) },
         Entry(type: .xyChart, keywords: ["xychart", "xychart-beta"]) { try XYChartParser.parse($0) },
         Entry(type: .radar, keywords: ["radar-beta", "radar"]) { try RadarParser.parse($0) },
+        Entry(type: .sankey, keywords: ["sankey", "sankey-beta"]) { try SankeyParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
