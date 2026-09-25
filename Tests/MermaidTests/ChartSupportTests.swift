@@ -39,4 +39,33 @@ struct ChartSupportTests {
         #expect(ChartNumber.format(1e21) == "1e+21")
         #expect(ChartNumber.format(123456789012) == "123456789012")
     }
+
+    @Test func anchoredTextLandsOnItsAnchor() {
+        let block = TextBlock(RichText(plain: "Label"), font: Font(size: 10), measurer: ApproximateTextMeasurer())
+        let start = TextItem(block, at: Point(10, 20), anchor: TextAnchor(horizontal: .start, vertical: .top), color: .black)
+        #expect(abs(start.frame.minX - 10) < 1e-9 && abs(start.frame.minY - 20) < 1e-9)
+        let end = TextItem(block, at: Point(10, 20), anchor: .trailing, color: .black)
+        #expect(abs(end.frame.maxX - 10) < 1e-9 && abs(end.frame.midY - 20) < 1e-9)
+        // Rotated -90° about a start/top anchor: the text runs upward from
+        // the anchor and hangs to its right.
+        let rotated = TextItem(block, at: Point(0, 0), anchor: TextAnchor(horizontal: .start, vertical: .top),
+                               color: .black, rotation: -90)
+        let box = rotated.bounds
+        #expect(abs(box.minX) < 1e-9 && abs(box.maxY) < 1e-9)
+        #expect(abs(box.width - block.height) < 1e-9 && abs(box.height - block.width) < 1e-9)
+    }
+
+    @Test func themeVariablesResolveNestedNumbersAndBareHex() {
+        let config = ConfigValue.object(["themeVariables": .object([
+            "pieOuterStrokeWidth": .string("5px"),
+            "quadrant1TextFill": .string("ff0000"),
+            "xyChart": .object(["titleColor": .string("#00ff00")]),
+        ])])
+        let context = RenderContext(theme: Theme(config: config), measurer: ApproximateTextMeasurer(), config: config)
+        #expect(context.themeNumber("pieOuterStrokeWidth", default: 2) == 5)
+        #expect(context.themeNumber("missing", default: 2) == 2)
+        #expect(context.themeColor("quadrant1TextFill", default: .black) == Color(hex: 0xFF0000))
+        #expect(context.themeColor("xyChart", "titleColor", default: .black) == Color(hex: 0x00FF00))
+        #expect(context.themeColor("xyChart", "lineColor", default: .white) == .white)
+    }
 }
