@@ -4,14 +4,15 @@ extension Scanner {
     /// character, as in Mermaid's Langium `STRING` terminal.
     ///
     /// Returns nil without consuming anything when no quote comes next, and
-    /// throws a located error when the literal is never closed.
-    mutating func readQuoted() throws -> String? {
+    /// throws a located error when the literal is never closed. Literals
+    /// may span lines only when `multiline` is set.
+    mutating func readQuoted(multiline: Bool = false) throws -> String? {
         guard let quote = peek(), quote == "\"" || quote == "'" else { return nil }
         let location = self.location
         var probe = self
         probe.advance()
         var text = ""
-        while let c = probe.peek(), c != "\n" {
+        while let c = probe.peek(), multiline || c != "\n" {
             probe.advance()
             if c == quote {
                 self = probe
