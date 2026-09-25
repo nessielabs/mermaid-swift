@@ -26,7 +26,7 @@ struct ClassErrorTests {
             ("class A[x]", 2, 9, "a label in double quotes"),
             ("class A {\n  +x", 2, 9, "Class 'A' is missing its closing '}'"),
             ("class A {\n  { nested", 3, 3, "Unexpected '{'"),
-            ("namespace N {\n class A", 2, 10, "Namespace 'N' is missing its closing '}'"),
+            ("namespace N {\n class A", 2, 11, "Namespace 'N' is missing its closing '}'"),
             ("namespace N", 2, 12, "Expected '{'"),
             ("}", 2, 1, "without an open namespace"),
             ("direction XY", 2, 11, "Unknown direction 'XY'"),

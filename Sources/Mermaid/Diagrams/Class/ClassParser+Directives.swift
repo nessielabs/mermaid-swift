@@ -5,8 +5,8 @@ extension ClassParser {
     /// `A`) and by syntax (a block inside another block), creating any
     /// missing ancestors, as in mermaid.js.
     mutating func namespace(_ s: inout Scanner) throws {
-        let location = s.location
         s.skipWhitespace()
+        let location = s.location
         let name = try ClassSyntax.requireClassName(&s, "a namespace name")
         s.skipWhitespace()
         var label: String?
