@@ -71,8 +71,52 @@ extension LayeredEngine {
                 if target.isFinite { x[v] = min(max(target, lo), hi) }
             }
         }
+        straightenLongEdges(&x, constraints: constraints, reverse: reverse)
         for v in vertices.indices { vertices[v].x = x[variable(v)] }
         return true
+    }
+
+    /// Lines each long edge's bends up in a single column wherever the
+    /// separation constraints allow, as dagre's vertical alignment does.
+    /// Relaxation leaves consecutive bends a few points apart, and a smooth
+    /// curve through those small jogs reads as a wobbly line. Runs of bends
+    /// whose feasible intervals overlap share one x (the one closest to their
+    /// median); a run breaks where no common x exists.
+    private func straightenLongEdges(_ x: inout [Double], constraints: [Int: [Int: Double]],
+                                     reverse: [Int: [Int: Double]]) {
+        var chains: [Int: [Int]] = [:]
+        for v in vertices.indices {
+            switch vertices[v].kind {
+            case .dummy(let edge), .label(let edge): chains[edge, default: []].append(v)
+            default: continue
+            }
+        }
+        func bounds(_ v: Int) -> ClosedRange<Double> {
+            let lo = (reverse[v] ?? [:]).map { x[$0.key] + $0.value }.max() ?? -.infinity
+            let hi = (constraints[v] ?? [:]).map { x[$0.key] - $0.value }.min() ?? .infinity
+            return lo...max(lo, hi)
+        }
+        for _ in 0..<2 {
+            for chain in chains.values {
+                let bends = chain.sorted { vertices[$0].rank < vertices[$1].rank }
+                var start = 0
+                while start < bends.count {
+                    var window = bounds(bends[start])
+                    var end = start + 1
+                    while end < bends.count {
+                        let next = bounds(bends[end])
+                        guard next.lowerBound <= window.upperBound, window.lowerBound <= next.upperBound else { break }
+                        window = max(window.lowerBound, next.lowerBound)...min(window.upperBound, next.upperBound)
+                        end += 1
+                    }
+                    let run = bends[start..<end]
+                    let sorted = run.map { x[$0] }.sorted()
+                    let target = sorted[sorted.count / 2].clamped(to: window)
+                    for v in run { x[v] = target }
+                    start = end
+                }
+            }
+        }
     }
 
     private func gap(_ a: Int, _ b: Int, _ spacing: Spacing) -> Double {
