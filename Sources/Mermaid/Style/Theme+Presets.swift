@@ -118,3 +118,19 @@ extension Theme {
         .base: [:],
     ]
 }
+
+extension Theme {
+    /// Resolves the theme selected by Mermaid configuration: the `theme`
+    /// name (or `fallback`) plus any `themeVariables`, `fontFamily`, and
+    /// `fontSize`.
+    public init(config: ConfigValue, fallback: Name = .default) {
+        var variables: [String: String] = [:]
+        for (key, value) in config["themeVariables"]?.objectValue ?? [:] {
+            if let text = value.stringValue { variables[key] = text }
+        }
+        let name = config["theme"]?.stringValue.flatMap { Name(rawValue: $0.lowercased()) } ?? fallback
+        self.init(name, variables: variables)
+        if let family = config["fontFamily"]?.stringValue { fontFamily = family }
+        if let size = config["fontSize"]?.numberValue { fontSize = size }
+    }
+}
