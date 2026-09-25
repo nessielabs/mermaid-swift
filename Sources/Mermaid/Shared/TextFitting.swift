@@ -63,7 +63,7 @@ struct TextFitting {
 
     /// Whether wrapping had to split a word across lines, which reads badly;
     /// a smaller font is preferred in that case.
-    private static func breaksWords(_ block: TextBlock, of text: RichText) -> Bool {
+    static func breaksWords(_ block: TextBlock, of text: RichText) -> Bool {
         let words = Set(text.plainText.split(whereSeparator: { $0 == " " || $0 == "\n" }).map(String.init))
         let pieces = block.lines.flatMap { line in
             line.runs.map(\.text).joined().split(separator: " ").map(String.init)

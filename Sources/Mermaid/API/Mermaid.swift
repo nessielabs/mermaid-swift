@@ -113,6 +113,7 @@ struct DiagramRegistry {
         Entry(type: .radar, keywords: ["radar-beta", "radar"]) { try RadarParser.parse($0) },
         Entry(type: .sankey, keywords: ["sankey", "sankey-beta"]) { try SankeyParser.parse($0) },
         Entry(type: .packet, keywords: ["packet", "packet-beta"]) { try PacketParser.parse($0) },
+        Entry(type: .treemap, keywords: ["treemap", "treemap-beta"]) { try TreemapParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
