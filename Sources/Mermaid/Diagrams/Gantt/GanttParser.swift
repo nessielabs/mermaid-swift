@@ -3,7 +3,8 @@
 /// The grammar is line oriented: keyword statements (`dateFormat`,
 /// `excludes`, `section`, ...), `click` statements, and tasks written as
 /// `name : tags, id, start, end`. Keywords are case-insensitive, as in
-/// mermaid.js.
+/// mermaid.js. Parsing finishes by scheduling the chart once, so invalid
+/// dates and unresolvable dependencies are reported with their location.
 struct GanttParser {
     var diagram = GanttDiagram()
     private var currentSection = ""
@@ -15,6 +16,7 @@ struct GanttParser {
         for line in source.lines {
             try parser.statement(line)
         }
+        _ = try parser.diagram.schedule(today: today ?? .now())
         return parser.diagram
     }
 
