@@ -42,8 +42,12 @@ do {
     let scene = try Mermaid.render(input, options: options)
     let url = URL(fileURLWithPath: arguments[1])
     if url.pathExtension.lowercased() == "png" {
+        #if canImport(ImageIO)
         guard let data = scene.pngData(scale: scale) else { fail("rendering failed") }
         try data.write(to: url)
+        #else
+        fail("PNG output requires CoreGraphics; write .svg instead")
+        #endif
     } else {
         try scene.svg.write(to: url, atomically: true, encoding: .utf8)
     }
