@@ -40,6 +40,11 @@ struct LabelParserTests {
         #expect(LabelParser.parse("`snake_case`").plainText == "snake_case")
     }
 
+    @Test func literalBackslashNBreaksLines() {
+        #expect(LabelParser.parse(#"first,\nsecond"#).lines.count == 2)
+        #expect(LabelParser.parse(#"first,\nsecond"#).plainText == "first,\nsecond")
+    }
+
     @Test func plainLabelsDoNotWrap() {
         #expect(!LabelParser.parse("hello").wraps)
     }
