@@ -52,8 +52,8 @@ extension StateSceneBuilder {
             guard let frame = layout.clusters[state.id] else { continue }
             let title = m.compositeTitles[state.id] ?? .empty
             let style = m.styles[state.id] ?? ElementStyle()
-            let paint = ShapePaint(fill: palette.compositeTitleBackground, stroke: palette.compositeBorder,
-                                   text: palette.stateText).applying(style)
+            let paint = legible(ShapePaint(fill: palette.compositeTitleBackground, stroke: palette.compositeBorder,
+                                           text: palette.stateText).applying(style), style: style)
             // Nesting alternates the body color so levels stay distinct.
             let bodyFill = style.fill ?? (depth.isMultiple(of: 2) ? palette.compositeBackground : palette.altBackground)
             let band = title.isEmpty ? 0 : title.height + 8
@@ -86,6 +86,22 @@ extension StateSceneBuilder {
             }
         }
         return []
+    }
+
+    /// Leniency beyond mermaid.js: when a style sets a fill but no text
+    /// color, and the theme's text would be hard to read on that fill
+    /// (light text on a light fill under the dark theme, say), the text
+    /// switches to whichever of a dark or light shade contrasts more.
+    func legible(_ paint: ShapePaint, style: ElementStyle) -> ShapePaint {
+        guard let fill = style.fill, style.textColor == nil, !fill.isClear else { return paint }
+        func contrast(_ a: Color, _ b: Color) -> Double {
+            (max(a.luminance, b.luminance) + 0.05) / (min(a.luminance, b.luminance) + 0.05)
+        }
+        guard contrast(paint.text, fill) < 3 else { return paint }
+        let dark = Color(hex: 0x222222), light = Color(hex: 0xF5F5F5)
+        var paint = paint
+        paint.text = contrast(dark, fill) >= contrast(light, fill) ? dark : light
+        return paint
     }
 
     // MARK: - Transitions
@@ -121,8 +137,8 @@ extension StateSceneBuilder {
         for state in diagram.states where !state.isComposite {
             guard let frame = stateFrame(state.id, m, layout), let box = m.boxes[state.id] else { continue }
             let style = m.styles[state.id] ?? ElementStyle()
-            let paint = ShapePaint(fill: palette.stateFill, stroke: palette.stateBorder, text: palette.stateText)
-                .applying(style)
+            let paint = legible(ShapePaint(fill: palette.stateFill, stroke: palette.stateBorder, text: palette.stateText)
+                .applying(style), style: style)
             switch state.kind {
             case .start:
                 items.append(StateShapes.start(frame: frame, color: style.fill ?? palette.special, id: state.id))
