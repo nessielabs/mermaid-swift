@@ -334,7 +334,7 @@ struct SequenceParserTests {
             ("A->>B: x\nand y", 3, 1),
             ("option z", 2, 1),
             ("participant A:B", 2, 13),
-            ("A->>B: fine; nonsense", 2, 14),
+            ("A->>B: fine; note nowhere", 2, 19),
             ("end now", 2, 4),
         ]
         for (body, line, column) in cases {

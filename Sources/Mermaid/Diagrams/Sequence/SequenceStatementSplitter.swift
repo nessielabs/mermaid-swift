@@ -15,7 +15,10 @@ enum SequenceStatementSplitter {
     ///
     /// A `;` ends a statement unless it closes an entity code such as
     /// `#59;` or `&amp;`, which is how mermaid.js lets messages contain
-    /// semicolons. A `%%` starts a comment that runs to the end of the line.
+    /// semicolons. Leniently, a `;` followed by text that cannot start a
+    /// statement (`A->>B: look up key; check hash`) is kept as text where
+    /// mermaid.js would fail. A `%%` starts a comment that runs to the end
+    /// of the line.
     static func split(_ lines: [SourceLine]) -> [SequenceStatementText] {
         var statements: [SequenceStatementText] = []
         for line in lines {
@@ -34,7 +37,8 @@ enum SequenceStatementSplitter {
                 if chars[i] == "%", i + 1 < chars.count, chars[i + 1] == "%" {
                     break
                 }
-                if chars[i] == ";", !closesEntity(chars, at: i) {
+                if chars[i] == ";", !closesEntity(chars, at: i),
+                   startsStatement(String(chars[(i + 1)...]).trimmingWhitespace()) {
                     flush(until: i)
                     start = i + 1
                 }
@@ -43,6 +47,15 @@ enum SequenceStatementSplitter {
             flush(until: i)
         }
         return statements
+    }
+
+    /// Whether text looks like the start of a statement: a keyword, a
+    /// message, or nothing at all.
+    static func startsStatement(_ text: String) -> Bool {
+        let text = text.hasPrefix("%%") ? "" : text
+        guard !text.isEmpty else { return true }
+        if let (keyword, _, _) = SequenceParser.keyword(in: text), SequenceParser.keywords.contains(keyword) { return true }
+        return SequenceArrowScanner.signal(in: text.splitOnce(":")?.0 ?? text) != nil
     }
 
     /// Whether the `;` at `index` terminates `#name`, `#123`, `&name` or `&#x1F;`.

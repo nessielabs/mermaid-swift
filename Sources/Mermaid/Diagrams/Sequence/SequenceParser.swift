@@ -59,6 +59,12 @@ struct SequenceParser {
         "critical": .critical, "break": .break, "rect": .rect,
     ]
 
+    /// Every statement keyword.
+    static let keywords: Set<String> = Set(blockKeywords.keys).union([
+        "participant", "actor", "create", "destroy", "box", "end", "else", "and", "option", "note",
+        "activate", "deactivate", "autonumber", "title", "link", "links", "properties", "details",
+    ])
+
     mutating func statement(_ s: SequenceStatementText) throws {
         guard let (keyword, rest, restOffset) = Self.keyword(in: s.text), !isSignal(s.text, startingWith: keyword) else {
             guard openBox == nil else { throw Self.insideBoxError(s) }
