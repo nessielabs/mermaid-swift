@@ -62,6 +62,7 @@ struct ThemeTests {
         #expect(theme.pieColors[2] == theme.tertiaryColor.adjusted(lightness: -40))
         #expect(theme.pieColors[7] == theme.primaryColor.adjusted(hue: -60, lightness: -40))
         #expect(Theme.dark.pieColors[0] == Theme.dark.sectionColors[1])
+        #expect(Theme.dark.sectionColors[2] == Color(css: "#4d1037"))
         #expect(Theme.neutral.pieColors[11] == Theme.neutral.sectionColors[0])
         #expect(Theme(.default, variables: ["pie3": "#123456"]).pieColors[2] == Color(css: "#123456"))
     }
