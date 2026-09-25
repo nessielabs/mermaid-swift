@@ -42,6 +42,20 @@ struct ThemeTests {
         #expect(custom.color("cScaleLabel0") == Color(css: "#ffffff"))
     }
 
+    @Test func sectionScaleHelpersRepeatAndStayLegible() {
+        let theme = Theme.default
+        #expect(theme.scaleColor(12) == theme.scaleColor(0) && theme.scaleColor(-1) == theme.scaleColor(11))
+        #expect(theme.scaleLabelColor(0) == .black)
+        #expect(Theme.dark.scaleLabelColor(1) == Color(hex: 0xD3D3D3))
+        #expect(Theme.neutral.scaleLabelColor(0) == Color(css: "#F4F4F4"))
+        // Neutral's white slot would make light labels invisible.
+        #expect(Theme.neutral.scaleLabelColor(7) == Color(hex: 0x333333))
+        let custom = Theme(.default, variables: ["cScale0": "#000000"])
+        #expect(custom.scaleLabelColor(0) == .white)
+        #expect(Theme(.default, variables: ["cScaleLabel2": "#123456"]).scaleLabelColor(14) == Color(hex: 0x123456))
+        #expect(Theme.neutral.scaleInverseColor(7) == .black)
+    }
+
     @Test func darkThemeUsesLightLines() {
         #expect(Theme.dark.background.isDark)
         #expect(!Theme.dark.lineColor.isDark)
