@@ -136,3 +136,39 @@ struct StrftimeFormatTests {
         #expect(StrftimeFormat("%k").format(date) == "%k")
     }
 }
+
+@Suite("Gantt time: intervals")
+struct CalendarIntervalTests {
+    @Test func parsesTickIntervals() {
+        #expect(CalendarInterval(tickInterval: "1day", firstWeekday: 0) == CalendarInterval(.day))
+        #expect(CalendarInterval(tickInterval: "2week", firstWeekday: 1) == CalendarInterval(.week(firstWeekday: 1), every: 2))
+        #expect(CalendarInterval(tickInterval: "0day", firstWeekday: 0) == nil)
+        #expect(CalendarInterval(tickInterval: "1decade", firstWeekday: 0) == nil)
+        #expect(CalendarInterval(tickInterval: "day", firstWeekday: 0) == nil)
+    }
+
+    @Test func listsBoundariesInRange() {
+        let days = CalendarInterval(.day, every: 2).dates(from: civil(2024, 1, 1, 12), through: civil(2024, 1, 8))
+        #expect(days == [civil(2024, 1, 3), civil(2024, 1, 5), civil(2024, 1, 7)])
+        let mondays = CalendarInterval(.week(firstWeekday: 1)).dates(from: civil(2024, 1, 1), through: civil(2024, 1, 20))
+        #expect(mondays == [civil(2024, 1, 1), civil(2024, 1, 8), civil(2024, 1, 15)])
+        let months = CalendarInterval(.month, every: 3).dates(from: civil(2024, 1, 15), through: civil(2024, 12, 31))
+        #expect(months == [civil(2024, 4, 1), civil(2024, 7, 1), civil(2024, 10, 1)])
+        let decades = CalendarInterval(.year, every: 10).dates(from: civil(1900, 1, 1), through: civil(1935, 1, 1))
+        #expect(decades.map { $0.components.year } == [1900, 1910, 1920, 1930])
+    }
+
+    @Test func automaticIntervalsMatchD3() {
+        #expect(CalendarInterval.automatic(from: civil(2014, 1, 1), to: civil(2014, 3, 1)) == CalendarInterval(.week(firstWeekday: 0)))
+        #expect(CalendarInterval.automatic(from: civil(2014, 1, 1), to: civil(2014, 1, 11)) == CalendarInterval(.day))
+        #expect(CalendarInterval.automatic(from: civil(2024, 1, 1, 17, 30), to: civil(2024, 1, 1, 18, 10)) == CalendarInterval(.minute, every: 5))
+        #expect(CalendarInterval.automatic(from: civil(1900, 1, 1), to: civil(1935, 1, 1)) == CalendarInterval(.year, every: 5))
+        #expect(CalendarInterval.automatic(from: CivilDateTime(milliseconds: 0), to: CivilDateTime(milliseconds: 71)) == CalendarInterval(.millisecond, every: 10))
+    }
+
+    @Test func tickStepsAreRound() {
+        #expect(CalendarInterval.tickStep(0, 35, 10) == 5)
+        #expect(CalendarInterval.tickStep(0, 1, 10) == 0.1)
+        #expect(CalendarInterval.tickStep(0, 71, 10) == 10)
+    }
+}
