@@ -186,6 +186,16 @@ struct LayeredLayoutTests {
         #expect(Set(bends.map { ($0.x * 100).rounded() }).count == 1)
     }
 
+    @Test func gapsGrowWhenEdgesTravelFarSideways() {
+        // A root fanning out to many children forces long sideways moves in
+        // the gap below it; that gap grows so the edges are not near-flat.
+        let children = (1...8).map { "C\($0)" }
+        let wide = LayeredLayout.compute(graph(children.map { ("R", $0) }))
+        let narrow = LayeredLayout.compute(graph([("R", "C1")]))
+        let gap = { (layout: LayeredLayout) in layout.nodes["C1"]!.minY - layout.nodes["R"]!.maxY }
+        #expect(gap(wide) > gap(narrow) + 10)
+    }
+
     @Test func edgesRunStraightThroughTheirLabels() {
         // The route keeps its bends' shared column through a label when that
         // column crosses the label, instead of jogging to the label's center.
