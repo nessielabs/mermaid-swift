@@ -78,11 +78,12 @@ extension LayeredEngine {
     private func gap(_ a: Int, _ b: Int, _ spacing: Spacing) -> Double {
         let half = { (v: Int) in self.vertices[v].width / 2 }
         switch (vertices[a].kind, vertices[b].kind) {
-        case (.border(let ca, true), .border(let cb, true)) where ca != cb: return spacing.cluster
+        case (.border(let ca, true), .border(let cb, true)) where ca != cb:
+            return spacing.cluster + (leadInsets.indices.contains(ca) ? leadInsets[ca] : 0)
         case (.border(let ca, false), .border(let cb, false)) where ca != cb: return spacing.cluster
         case (.border(let ca, true), .border(let cb, false)) where ca == cb: return 0
         case (.border(_, false), .border(_, true)): return spacing.node
-        case (.border(_, true), _): return half(b) + spacing.cluster
+        case (.border(let c, true), _): return half(b) + spacing.cluster + (leadInsets.indices.contains(c) ? leadInsets[c] : 0)
         case (_, .border(_, false)): return half(a) + spacing.cluster
         case (.border, _): return half(b) + spacing.node
         case (_, .border): return half(a) + spacing.node

@@ -42,6 +42,9 @@ struct LayeredEngine {
     /// Cluster index → parent cluster index.
     var clusterParent: [Int?] = []
     var clusterLabels: [Size] = []
+    /// Extra space between a cluster's leading border and its contents, used
+    /// for titles when the flow is horizontal.
+    var leadInsets: [Double] = []
 
     // MARK: - Ranking
 
