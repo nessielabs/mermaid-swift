@@ -34,6 +34,12 @@ struct FlowchartParserTests {
         #expect(node.label == "Hello [world] (x)")
     }
 
+    @Test func quotedStringsMayStandInForNodeIDs() throws {
+        let d = try parse(#""Mac SQLite" --> "Sync API""#)
+        #expect(d.nodes.map(\.id) == ["Mac SQLite", "Sync API"])
+        #expect(d.links.count == 1)
+    }
+
     @Test func v11ShapeMetadata() throws {
         let node = try parse(#"A@{ shape: cyl, label: "Store" }"#).nodes[0]
         #expect(node.shape == .cylinder && node.label == "Store")

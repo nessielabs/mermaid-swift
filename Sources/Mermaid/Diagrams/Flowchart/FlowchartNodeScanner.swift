@@ -30,6 +30,17 @@ enum FlowchartNodeScanner {
 
     static func scan(_ s: inout Scanner) throws -> FlowchartNodeToken? {
         let location = s.location
+        // Leniency beyond mermaid.js: a quoted string used where a node id
+        // belongs (common in generated diagrams) names the node and labels it.
+        if s.peek() == "\"" {
+            var probe = s
+            probe.advance()
+            if let text = probe.read(until: "\""), !text.isEmpty, !text.contains("\n") {
+                probe.advance()
+                s = probe
+                return FlowchartNodeToken(id: text, label: text)
+            }
+        }
         let id = readID(&s)
         guard !id.isEmpty else { return nil }
         var token = FlowchartNodeToken(id: id)
