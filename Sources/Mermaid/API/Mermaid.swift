@@ -94,7 +94,9 @@ struct DiagramRegistry {
         var parse: @Sendable (DiagramSource) throws -> any Diagram
     }
 
-    static let entries: [Entry] = []
+    static let entries: [Entry] = [
+        Entry(type: .flowchart, keywords: ["flowchart", "graph", "flowchart-elk"]) { try FlowchartParser.parse($0) },
+    ]
 
     static func entry(for keyword: String) -> Entry? {
         let lower = keyword.lowercased()
