@@ -100,6 +100,7 @@ struct DiagramRegistry {
         Entry(type: .entityRelationship, keywords: ["erDiagram"]) { try EntityRelationshipParser.parse($0) },
         Entry(type: .requirement, keywords: ["requirementDiagram"]) { try RequirementParser.parse($0) },
         Entry(type: .sequence, keywords: ["sequenceDiagram"]) { try SequenceParser.parse($0) },
+        Entry(type: .state, keywords: ["stateDiagram", "stateDiagram-v2"]) { try StateParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {

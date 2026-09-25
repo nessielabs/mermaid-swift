@@ -1,3 +1,9 @@
+extension StateDiagram: Diagram {
+    public func scene(in context: RenderContext) throws -> Scene {
+        StateSceneBuilder(diagram: self, context: context).build()
+    }
+}
+
 /// The colors of a state diagram, from mermaid.js' state theme variables
 /// and their defaults.
 struct StatePalette {
@@ -77,6 +83,13 @@ struct StateSceneBuilder {
         /// Notes that are layout nodes of their own.
         var standalone: [Int] = []
         var transitionLabels: [TextBlock?] = []
+    }
+
+    func build() -> Scene {
+        let measured = measure()
+        let layout = LayeredLayout.compute(graph(measured))
+        let items = draw(measured, layout: layout)
+        return DiagramCanvas(context: context, margin: setting("diagramPadding", 8)).scene(content: items, size: layout.size)
     }
 
     // MARK: - Styles and text
