@@ -12,9 +12,11 @@ let package = Package(
     ],
     products: [
         .library(name: "Mermaid", targets: ["Mermaid"]),
+        .executable(name: "mermaid-render", targets: ["MermaidRender"]),
     ],
     targets: [
         .target(name: "Mermaid"),
+        .executableTarget(name: "MermaidRender", dependencies: ["Mermaid"]),
         .testTarget(name: "MermaidTests", dependencies: ["Mermaid"]),
     ]
 )
