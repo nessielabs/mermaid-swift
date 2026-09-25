@@ -25,7 +25,7 @@ struct Connector {
         points = EdgeGeometry.shortenEnd(points, by: endMarker.inset(lineWidth: width))
         points = EdgeGeometry.shortenStart(points, by: startMarker.inset(lineWidth: width))
         var items: [SceneItem] = [
-            .shape(ShapeItem(curve.path(through: points), stroke: Stroke(color, width: width, dash: dash, join: .round))),
+            .shape(ShapeItem(pathThroughLabel(points), stroke: Stroke(color, width: width, dash: dash, join: .round))),
         ]
         items += endMarker.items(tip: tip, direction: endDirection, color: color, lineWidth: width, background: background)
         items += startMarker.items(tip: tail, direction: startDirection, color: color, lineWidth: width, background: background)
@@ -38,6 +38,20 @@ struct Connector {
             items.append(.text(TextItem(label, centeredAt: center, color: labelColor)))
         }
         return [.group(GroupItem(id: id, role: "edge", items: items))]
+    }
+
+    /// Smooths the route with the curve but pins it to the label anchor, so
+    /// a label always sits on its line: B-splines only approximate their
+    /// control points, which would let labels drift away from the stroke.
+    private func pathThroughLabel(_ points: [Point]) -> Path {
+        guard let anchor = labelCenter, let k = points.firstIndex(of: anchor), k > 0, k < points.count - 1 else {
+            return curve.path(through: points)
+        }
+        var path = curve.path(through: Array(points[...k]))
+        var tail = curve.path(through: Array(points[k...]))
+        if case .move = tail.elements.first { tail = Path.fromElements(Array(tail.elements.dropFirst())) }
+        path.append(tail)
+        return path
     }
 
     /// The point halfway along a polyline's length.

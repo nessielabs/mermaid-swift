@@ -16,6 +16,12 @@ public struct Path: Hashable, Sendable {
 
     public init() {}
 
+    static func fromElements(_ elements: [Element]) -> Path {
+        var path = Path()
+        path.elements = elements
+        return path
+    }
+
     public var isEmpty: Bool { elements.isEmpty }
 
     public mutating func move(to p: Point) { elements.append(.move(p)) }
