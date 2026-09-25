@@ -76,6 +76,7 @@ struct ClassSceneBuilder {
         let graph = makeGraph(measured)
         let layout = LayeredLayout.compute(graph)
         var items = clusterItems(layout, measured)
+        items += relationItems(layout, measured)
         items += nodeItems(layout, measured)
         return DiagramCanvas(context: context, margin: setting("diagramPadding", 8))
             .scene(content: items, size: layout.size)
