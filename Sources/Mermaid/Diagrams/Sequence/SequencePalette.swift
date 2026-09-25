@@ -30,7 +30,7 @@ struct SequencePalette {
     init(theme: Theme) {
         func v(_ name: String, _ fallback: Color) -> Color { theme.color(name, default: fallback) }
         actorBkg = v("actorBkg", theme.mainBkg)
-        actorBorder = v("actorBorder", theme.primaryBorderColor)
+        actorBorder = v("actorBorder", theme.nodeBorder)
         actorTextColor = v("actorTextColor", theme.primaryTextColor)
         actorLineColor = v("actorLineColor", actorBorder.isClear ? theme.lineColor : actorBorder.mixed(with: theme.lineColor, amount: 0.35))
         glyphColor = actorBorder.mixed(with: actorTextColor, amount: 0.45)
