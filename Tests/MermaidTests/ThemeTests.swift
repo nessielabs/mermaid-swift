@@ -27,6 +27,21 @@ struct ThemeTests {
         #expect(theme.color("git0") == Color(css: "#123456"))
     }
 
+    @Test func sectionScaleFollowsEachTheme() {
+        // default and forest darken the derived scale by 10 points.
+        #expect(Theme.default.sectionColors[0] == Color(css: "#ECECFF")!.darkened(10))
+        #expect(Theme.forest.sectionColors[1] == Color(css: "#cdffb2")!.darkened(10))
+        // dark and neutral define most of the scale outright.
+        #expect(Theme.dark.sectionColors[0] == Theme.dark.primaryColor)
+        #expect(Theme.dark.sectionColors[1] == Color(css: "#0b0000"))
+        #expect(Theme.neutral.sectionColors[0] == Color(css: "#555"))
+        // base darkens by 25; explicit values are kept as given.
+        #expect(Theme(.base).sectionColors[0] == Theme(.base).primaryColor.darkened(25))
+        let custom = Theme(.default, variables: ["cScale0": "#ff0000", "cScaleLabel0": "#ffffff"])
+        #expect(custom.sectionColors[0] == Color(css: "#ff0000"))
+        #expect(custom.color("cScaleLabel0") == Color(css: "#ffffff"))
+    }
+
     @Test func darkThemeUsesLightLines() {
         #expect(Theme.dark.background.isDark)
         #expect(!Theme.dark.lineColor.isDark)

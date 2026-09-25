@@ -62,8 +62,17 @@ extension Theme {
 
         let hues: [Double] = [0, 0, 0, 30, 60, 90, 120, 150, 210, 270, 300, 330]
         sectionColors = hues.enumerated().map { i, hue in
-            let base = i == 1 ? secondary : (i == 2 ? tertiary : primary.adjusted(hue: hue))
-            return v("cScale\(i)", dark ? base.darkened(25) : base)
+            if let fixed = Self.fixedSectionColors[name]?[i].flatMap({ Color(css: $0) }) {
+                return v("cScale\(i)", fixed)
+            }
+            // The base theme lifts cScale8's lightness by 150 points (to white).
+            let lift: Double = name == .base && i == 8 ? 150 : 0
+            let base = i == 1 ? secondary : (i == 2 ? tertiary : primary.adjusted(hue: hue, lightness: lift))
+            switch name {
+            case .default, .forest: return v("cScale\(i)", base.darkened(10))
+            case .base: return v("cScale\(i)", base.darkened(dark ? 75 : 25))
+            case .dark, .neutral: return v("cScale\(i)", base)
+            }
         }
         let pieSpec: [(Color, Double, Double)] = [
             (primary, 0, 0), (secondary, 0, 0), (tertiary, 0, 0),
@@ -82,9 +91,17 @@ extension Theme {
             "noteBorderColor", "noteTextColor",
         ]
         extras = explicit.filter { key, _ in
-            !modeled.contains(key) && !key.hasPrefix("cScale") && !(key.hasPrefix("pie") && Int(key.dropFirst(3)) != nil)
+            !modeled.contains(key) && !(key.hasPrefix("cScale") && Int(key.dropFirst(6)) != nil) && !(key.hasPrefix("pie") && Int(key.dropFirst(3)) != nil)
         }
     }
+
+    /// Section scale colors (`cScale0`...`cScale11`) that mermaid.js' dark
+    /// and neutral themes define outright; nil entries are derived.
+    static let fixedSectionColors: [Name: [String?]] = [
+        .dark: [nil, "#0b0000", "#4d1037", "#3f5258", "#4f2f1b", "#6e0a0a", "#3b0048", "#995a01", "#154706",
+                "#161722", "#00296f", "#01629c"],
+        .neutral: ["#555", "#F4F4F4", "#555", "#BBB", "#777", "#999", "#DDD", "#FFF", "#DDD", "#BBB", "#999", "#777"],
+    ]
 
     /// Base variables for each named theme, from mermaid.js' theme files.
     /// Everything else is derived.
