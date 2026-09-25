@@ -88,8 +88,16 @@ struct StateSceneBuilder {
     func build() -> Scene {
         let measured = measure()
         let layout = LayeredLayout.compute(graph(measured))
-        let items = draw(measured, layout: layout)
-        return DiagramCanvas(context: context, margin: setting("diagramPadding", 8)).scene(content: items, size: layout.size)
+        var items = draw(measured, layout: layout)
+        // Fit the canvas to what was drawn: the room reserved for notes on
+        // the far side of their state is empty, and self-loop labels may
+        // reach past the layout's box.
+        var size = layout.size
+        if let bounds = SceneItem.bounds(of: items) {
+            items = items.map { $0.offsetBy(dx: -bounds.minX, dy: -bounds.minY) }
+            size = bounds.size
+        }
+        return DiagramCanvas(context: context, margin: setting("diagramPadding", 8)).scene(content: items, size: size)
     }
 
     // MARK: - Styles and text
@@ -108,10 +116,15 @@ struct StateSceneBuilder {
                          maxWidth: setting("wrappingWidth", 200))
     }
 
-    /// The direction a state is laid out in: that of its nearest container
-    /// declaring one, or the diagram's.
-    func direction(of id: String) -> LayeredGraph.Direction {
-        var current = diagram.state(id)?.parent
+    /// The direction a container (composite state or region) lays out its
+    /// contents in: its declared direction, else its container's, else the
+    /// diagram's; nil stands for the top level.
+    ///
+    /// mermaid.js lays undirected composites out top to bottom whatever the
+    /// diagram's direction; inheriting instead keeps `direction LR` at the
+    /// top meaning left to right throughout, which is what authors expect.
+    func direction(ofContainer id: String?) -> LayeredGraph.Direction {
+        var current = id
         var seen: Set<String> = []
         while let container = current, seen.insert(container).inserted {
             if let region = diagram.region(container) {
@@ -167,7 +180,7 @@ struct StateSceneBuilder {
             return Box(size: Size(28, 28), title: .empty)
         case .fork, .join:
             let long = setting("forkWidth", 70), short = setting("forkHeight", 7)
-            let size = direction(of: state.id).isHorizontal ? Size(short, long) : Size(long, short)
+            let size = direction(ofContainer: state.parent).isHorizontal ? Size(short, long) : Size(long, short)
             return Box(size: size, title: .empty)
         case .state:
             let body = state.body.isEmpty ? nil : text(state.body.joined(separator: "\n"), style: style)
@@ -214,11 +227,14 @@ struct StateSceneBuilder {
         }
         for state in diagram.states where state.isComposite {
             let title = m.compositeTitles[state.id] ?? .empty
+            // Every container gets a direction, so the layout can lay out
+            // composites no transition crosses on their own, as boxes that
+            // transitions attach to.
             graph.clusters.append(.init(id: state.id, parent: state.parent, labelSize: Size(title.width, title.height),
-                                        direction: state.direction))
+                                        direction: direction(ofContainer: state.id)))
         }
         for region in diagram.regions {
-            graph.clusters.append(.init(id: region.id, parent: region.composite, direction: region.direction))
+            graph.clusters.append(.init(id: region.id, parent: region.composite, direction: direction(ofContainer: region.id)))
         }
         for (i, transition) in diagram.transitions.enumerated() {
             let label = m.transitionLabels[i].map { Size($0.width + 4, $0.height + 2) }
