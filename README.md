@@ -34,6 +34,33 @@ struct DiagramView: View {
 }
 ```
 
+## Supported diagrams
+
+Every diagram type in the Mermaid specification:
+
+| Diagram | Header | | Diagram | Header |
+|---|---|---|---|---|
+| Flowchart | `flowchart`, `graph` | | Git graph | `gitGraph` |
+| Sequence | `sequenceDiagram` | | Mindmap | `mindmap` |
+| Class | `classDiagram` | | Timeline | `timeline` |
+| State | `stateDiagram-v2` | | Quadrant chart | `quadrantChart` |
+| Entity relationship | `erDiagram` | | XY chart | `xychart` |
+| Requirement | `requirementDiagram` | | Sankey | `sankey` |
+| User journey | `journey` | | Radar | `radar` |
+| Gantt | `gantt` | | Treemap | `treemap` |
+| Pie | `pie` | | Packet | `packet` |
+| Kanban | `kanban` | | Block | `block` |
+| C4 | `C4Context`, `C4Container`, `C4Component`, `C4Dynamic`, `C4Deployment` | | Architecture | `architecture` |
+
+`-beta` and `-v2` header spellings are accepted too.
+
+Output follows mermaid.js closely. Where this library deliberately differs
+(accepting input mermaid.js rejects, or fixing a mermaid.js rendering
+quirk), the difference is documented in the code at the point it happens.
+Interactive features have no static equivalent: `click` links, tooltips and
+hover effects are parsed but not drawn, and icons from external icon packs
+(Font Awesome, Iconify) are replaced with built-in glyphs.
+
 ## Features
 
 - **Mermaid-compatible syntax** for every diagram type, including front
