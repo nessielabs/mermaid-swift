@@ -161,7 +161,7 @@ struct C4LayoutTests {
         UpdateRelStyle(a, b, $offsetX="-900", $offsetY="-400")
         """, options: RenderOptions(measurer: ApproximateTextMeasurer()))
         for item in scene.items {
-            let bounds = try #require(item.inkBounds)
+            let bounds = try #require(item.bounds)
             #expect(bounds.minX >= 0 && bounds.minY >= 0 && bounds.maxX <= scene.size.width && bounds.maxY <= scene.size.height)
         }
     }

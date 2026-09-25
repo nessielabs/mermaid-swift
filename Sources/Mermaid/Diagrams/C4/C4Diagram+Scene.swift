@@ -61,7 +61,7 @@ struct C4SceneBuilder {
             items.append(box.items(in: frame, id: element.alias))
         }
         items += labels
-        let bounds = items.compactMap(\.inkBounds).reduce(Rect(x: 0, y: 0, width: layout.size.width, height: layout.size.height)) { $0.union($1) }
+        let bounds = items.compactMap(\.bounds).reduce(Rect(x: 0, y: 0, width: layout.size.width, height: layout.size.height)) { $0.union($1) }
         let content = items.map { $0.offsetBy(dx: -bounds.minX, dy: -bounds.minY) }
         let canvas = DiagramCanvas(context: context, margin: palette.diagramMarginY * 2, title: diagram.title)
         return canvas.scene(content: content, size: bounds.size)

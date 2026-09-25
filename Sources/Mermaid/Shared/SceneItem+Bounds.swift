@@ -29,8 +29,3 @@ extension SceneItem {
         return boxes.dropFirst().reduce(first) { $0.union($1) }
     }
 }
-
-extension SceneItem {
-    /// Transitional name for `bounds`.
-    var inkBounds: Rect? { bounds }
-}
