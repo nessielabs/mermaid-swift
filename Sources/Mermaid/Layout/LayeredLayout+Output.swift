@@ -31,6 +31,39 @@ extension LayeredComputation {
         }
     }
 
+    /// Where each edge leaves its source and enters its target: points on
+    /// the edge of the endpoint's rank band, spread across the node's width
+    /// in the order of the neighbors they lead to, so edges leave and arrive
+    /// vertically and fan out without crossing same-rank neighbors.
+    func edgePorts(chains: [[Int]], bandHeight: [Int: Double]) -> [Int: (exit: Point, entry: Point)] {
+        let vertices = engine.vertices
+        struct Key: Hashable { var vertex: Int; var down: Bool }
+        var groups: [Key: [(edge: Int, towardX: Double, isExit: Bool)]] = [:]
+        for (e, chain) in chains.enumerated() where chain.count >= 2 && chain.first != chain.last {
+            let a = chain[0], b = chain[1], t = chain[chain.count - 1], p = chain[chain.count - 2]
+            groups[Key(vertex: a, down: vertices[b].rank > vertices[a].rank), default: []]
+                .append((e, vertices[b].x, true))
+            groups[Key(vertex: t, down: vertices[p].rank > vertices[t].rank), default: []]
+                .append((e, vertices[p].x, false))
+        }
+        var exits: [Int: Point] = [:], entries: [Int: Point] = [:]
+        for (key, members) in groups {
+            let vertex = vertices[key.vertex]
+            let sorted = members.sorted { $0.towardX < $1.towardX }
+            let usable = vertex.width * 0.6
+            let step = sorted.count > 1 ? min(usable / Double(sorted.count - 1), 24) : 0
+            let half = (bandHeight[vertex.rank] ?? vertex.height) / 2
+            let y = vertex.y + (key.down ? half : -half)
+            for (i, member) in sorted.enumerated() {
+                let x = vertex.x + (Double(i) - Double(sorted.count - 1) / 2) * step
+                if member.isExit { exits[member.edge] = Point(x, y) } else { entries[member.edge] = Point(x, y) }
+            }
+        }
+        var result: [Int: (exit: Point, entry: Point)] = [:]
+        for e in exits.keys { if let entry = entries[e] { result[e] = (exits[e]!, entry) } }
+        return result
+    }
+
     func clustersInnermostFirst() -> [Int] {
         engine.clusterParent.indices.sorted { engine.ancestry($0).count > engine.ancestry($1).count }
     }
@@ -93,27 +126,26 @@ extension LayeredComputation {
         // through a tall neighbor.
         var bandHeight: [Int: Double] = [:]
         for v in vertices { bandHeight[v.rank] = max(bandHeight[v.rank] ?? 0, v.height) }
-        var routes = chains.map { chain -> LayeredLayout.Route in
-            var points: [Point] = []
+        let ports = edgePorts(chains: chains, bandHeight: bandHeight)
+        var routes = chains.enumerated().map { e, chain -> LayeredLayout.Route in
+            guard chain.count >= 2 else { return .init(points: [], labelCenter: nil) }
+            var points: [Point] = [screen(Point(vertices[chain[0]].x, vertices[chain[0]].y))]
+            if let exit = ports[e]?.exit { points.append(screen(exit)) }
             var labelCenter: Point?
-            for (i, v) in chain.enumerated() {
+            let ascending = vertices[chain[0]].rank < vertices[chain[chain.count - 1]].rank
+            for v in chain.dropFirst().dropLast() {
                 let vertex = vertices[v]
                 let center = Point(vertex.x, vertex.y)
                 let half = (bandHeight[vertex.rank] ?? 0) / 2
-                guard i > 0, i < chain.count - 1, half > 1 else {
-                    points.append(screen(center))
-                    continue
-                }
-                let ascending = vertices[chain[0]].rank < vertices[chain[chain.count - 1]].rank
-                let entry = Point(vertex.x, vertex.y + (ascending ? -half : half))
-                let exit = Point(vertex.x, vertex.y + (ascending ? half : -half))
-                points.append(screen(entry))
-                if case .label = vertex.kind {
-                    labelCenter = screen(center)
-                    points.append(screen(center))
-                }
-                points.append(screen(exit))
+                if case .label = vertex.kind { labelCenter = screen(center) }
+                guard half > 1 else { points.append(screen(center)); continue }
+                points.append(screen(Point(vertex.x, vertex.y + (ascending ? -half : half))))
+                if case .label = vertex.kind { points.append(screen(center)) }
+                points.append(screen(Point(vertex.x, vertex.y + (ascending ? half : -half))))
             }
+            if let entry = ports[e]?.entry { points.append(screen(entry)) }
+            let last = vertices[chain[chain.count - 1]]
+            points.append(screen(Point(last.x, last.y)))
             return .init(points: points, labelCenter: labelCenter)
         }
         for e in loops {

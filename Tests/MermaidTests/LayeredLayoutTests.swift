@@ -58,13 +58,25 @@ struct LayeredLayoutTests {
     @Test func longEdgesPassVerticallyThroughIntermediateRanks() {
         let layout = LayeredLayout.compute(graph([("A", "B"), ("B", "C"), ("A", "C")]))
         let points = layout.edges[2].points
-        #expect(points.count == 4)
+        // center, exit port, bend entry, bend exit, entry port, center
+        #expect(points.count == 6)
         // The bend occupies B's rank band from top to bottom at one x, so the
         // edge cannot cut through B's neighbors.
-        #expect(points[1].x == points[2].x)
-        #expect(points[1].y <= layout.nodes["B"]!.minY + 0.001)
-        #expect(points[2].y >= layout.nodes["B"]!.maxY - 0.001)
-        #expect(abs(points[1].x - layout.nodes["B"]!.midX) >= layout.nodes["B"]!.width / 2)
+        #expect(points[2].x == points[3].x)
+        #expect(points[2].y <= layout.nodes["B"]!.minY + 0.001)
+        #expect(points[3].y >= layout.nodes["B"]!.maxY - 0.001)
+        #expect(abs(points[2].x - layout.nodes["B"]!.midX) >= layout.nodes["B"]!.width / 2)
+    }
+
+    @Test func edgesLeaveAndEnterThroughSpreadPorts() {
+        let layout = LayeredLayout.compute(graph([("A", "B"), ("A", "C"), ("A", "D")]))
+        let a = layout.nodes["A"]!
+        let exits = layout.edges.map { $0.points[1] }
+        #expect(exits.allSatisfy { abs($0.y - a.maxY) < 0.001 && $0.x > a.minX && $0.x < a.maxX })
+        #expect(Set(exits.map(\.x)).count == 3)
+        // Ports follow the targets' left-to-right order, so edges do not cross.
+        let targets = ["B", "C", "D"].map { layout.nodes[$0]!.midX }
+        #expect(zip(exits, targets).sorted { $0.1 < $1.1 }.map(\.0.x) == exits.map(\.x).sorted())
     }
 
     @Test func labeledEdgesGetALabelSlot() {
