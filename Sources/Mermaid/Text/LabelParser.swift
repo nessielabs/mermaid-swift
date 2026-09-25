@@ -64,7 +64,9 @@ public enum LabelParser {
     // MARK: - HTML-ish labels
 
     static func parseHTML(_ text: String) -> RichText {
-        let text = removeIcons(decodeMermaidEntities(text))
+        // Leniency beyond mermaid.js: generated diagrams often write a literal
+        // `\n` expecting a line break (mermaid.js prints it verbatim).
+        let text = removeIcons(decodeMermaidEntities(text)).replacingOccurrences(of: "\\n", with: "\n")
         var lines: [RichText.Line] = [[]]
         var style = RichText.Span("")
         var index = text.startIndex
