@@ -23,13 +23,13 @@ struct GitGraphPalette {
         let derived: [Color]
         switch t.name {
         case .dark:
-            // theme-dark.js ignores explicit gitN values and lightens the pie colors.
-            let pies = t.pieColors
-            func pie(_ i: Int, _ fallback: Color) -> Color { pies.indices.contains(i) ? pies[i] : fallback }
-            derived = [t.secondaryColor.lightened(20), pie(1, t.secondaryColor).lightened(20),
-                       pie(2, t.tertiaryColor).lightened(20), pie(3, t.primaryColor.adjusted(hue: -30)).lightened(20),
-                       pie(4, t.primaryColor.adjusted(hue: -60)).lightened(20), pie(5, t.primaryColor.adjusted(hue: -90)).lightened(10),
-                       pie(6, t.primaryColor.adjusted(hue: 60)).lightened(10), pie(7, t.primaryColor.adjusted(hue: 120)).lightened(20)]
+            // theme-dark.js ignores explicit gitN values and lightens the pie
+            // colors, which are its section scale.
+            let scale = t.sectionColors
+            func pie(_ i: Int) -> Color { scale.indices.contains(i) ? scale[i] : t.primaryColor }
+            derived = [t.secondaryColor.lightened(20)] + (1..<Self.count).map { i in
+                pie(i + 1).lightened(i == 5 || i == 6 ? 10 : 20)
+            }
         case .neutral:
             let pies = t.pieColors
             derived = (0..<Self.count).map { i in
