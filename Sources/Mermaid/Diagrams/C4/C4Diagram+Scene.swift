@@ -91,10 +91,15 @@ struct C4BoundaryHeader {
     }
 
     func items(in frame: Rect, boundary: C4Diagram.Boundary, palette: C4Palette) -> SceneItem {
+        // Boundaries are dashed with titles on the left; deployment nodes
+        // are solid with titles centered, or aligned by Node_L/Node_R.
         var alignment = TextItem.Alignment.leading
-        if case .deploymentNode(let nodeAlignment) = boundary.kind { alignment = nodeAlignment ?? .center }
-        let isNode = alignment != .leading || { if case .deploymentNode = boundary.kind { return true }; return false }()
-        let stroke = Stroke(boundary.style.border ?? palette.neutralLine, width: 1, dash: isNode ? [] : [7, 7])
+        var dash: [Double] = [7, 7]
+        if case .deploymentNode(let nodeAlignment) = boundary.kind {
+            alignment = nodeAlignment ?? .center
+            dash = []
+        }
+        let stroke = Stroke(boundary.style.border ?? palette.neutralLine, width: 1, dash: dash)
         var items: [SceneItem] = [.shape(ShapeItem(.rect(frame, cornerRadius: 4), fill: boundary.style.background, stroke: stroke))]
         let color = boundary.style.font ?? palette.neutralText
         let inner = frame.insetBy(dx: 12, dy: 0)
