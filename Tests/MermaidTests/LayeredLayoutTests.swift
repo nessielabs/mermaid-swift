@@ -170,4 +170,19 @@ struct LayeredLayoutTests {
         #expect(Set(sides).count == 1, "long edge switches sides of the cluster")
         #expect(route.allSatisfy { !box.contains($0) })
     }
+
+    @Test func longEdgeBendsLineUpInOneColumn() {
+        // Relaxation left a long edge's bends a few points apart, and the
+        // smoothed curve through those jogs wobbled. Where nothing forces a
+        // jog, every bend of the edge shares one x.
+        var g = graph([("L", "M"), ("M", "A"), ("M", "B"), ("A", "S"), ("B", "S"),
+                       ("C3", "K"), ("K", "H"), ("H", "R"), ("L", "R")],
+                      clusters: [.init(id: "S", labelSize: Size(120, 16))],
+                      membership: ["C1": "S", "C2": "S", "C3": "S"])
+        g.edges += [.init(from: "C1", to: "C2"), .init(from: "C2", to: "C3")]
+        let layout = LayeredLayout.compute(g)
+        let bends = layout.edges[8].points.dropFirst(2).dropLast(2)
+        #expect(bends.count >= 6)
+        #expect(Set(bends.map { ($0.x * 100).rounded() }).count == 1)
+    }
 }
