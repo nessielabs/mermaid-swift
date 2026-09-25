@@ -60,8 +60,10 @@ struct LayeredEngine {
                     let arcIndex = outgoing[top.vertex][top.next]
                     let target = arcs[arcIndex].to
                     if state[target] == 1 {
-                        arcs[arcIndex].reversed = true
-                        swap(&arcs[arcIndex].from, &arcs[arcIndex].to)
+                        var arc = arcs[arcIndex]
+                        arc.reversed = true
+                        (arc.from, arc.to) = (arc.to, arc.from)
+                        arcs[arcIndex] = arc
                     } else if state[target] == 0 {
                         state[target] = 1
                         stack.append((target, 0))
