@@ -123,4 +123,34 @@ struct LayeredLayoutTests {
         #expect(points.count == 4)
         #expect(points[1].x > layout.nodes["A"]!.maxX)
     }
+
+    @Test func isolatedClustersUseTheirOwnDirection() {
+        var g = graph([("A", "B"), ("B", "C"), ("X", "Y")],
+                      clusters: [.init(id: "S", labelSize: Size(40, 16), direction: .leftToRight)],
+                      membership: ["A": "S", "B": "S", "C": "S"])
+        g.direction = .topToBottom
+        let layout = LayeredLayout.compute(g)
+        let a = layout.nodes["A"]!, b = layout.nodes["B"]!, c = layout.nodes["C"]!
+        #expect(a.midX < b.midX && b.midX < c.midX)
+        #expect(abs(a.midY - c.midY) < 0.5)
+        let box = layout.clusters["S"]!
+        #expect([a, b, c].allSatisfy { box.contains($0.origin) && box.contains(Point($0.maxX, $0.maxY)) })
+        #expect(layout.edges[0].points.first == a.center)
+        #expect(layout.nodes["X"]!.midY < layout.nodes["Y"]!.midY)
+        assertNoOverlaps(layout)
+    }
+
+    @Test func clusterDirectionIsIgnoredWhenEdgesCrossItsBoundary() {
+        let g = graph([("A", "B"), ("B", "X")],
+                      clusters: [.init(id: "S", direction: .leftToRight)], membership: ["A": "S", "B": "S"])
+        let layout = LayeredLayout.compute(g)
+        #expect(layout.nodes["A"]!.midY < layout.nodes["B"]!.midY)
+    }
+
+    @Test func edgesToACollapsedClusterAttachToItsBox() {
+        let g = graph([("A", "B"), ("X", "S")],
+                      clusters: [.init(id: "S", direction: .leftToRight)], membership: ["A": "S", "B": "S"])
+        let layout = LayeredLayout.compute(g)
+        #expect(layout.edges[1].points.last == layout.clusters["S"]!.center)
+    }
 }
