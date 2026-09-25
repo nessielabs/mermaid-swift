@@ -47,6 +47,12 @@ extension StringProtocol {
         return String(self[start...end])
     }
 
+    /// The text without one pair of surrounding double quotes, if present.
+    var unquoted: String {
+        guard count >= 2, hasPrefix("\""), hasSuffix("\"") else { return String(self) }
+        return String(dropFirst().dropLast())
+    }
+
     /// Splits once at the first occurrence of `separator`.
     func splitOnce(_ separator: String) -> (String, String)? {
         guard let range = range(of: separator) else { return nil }
