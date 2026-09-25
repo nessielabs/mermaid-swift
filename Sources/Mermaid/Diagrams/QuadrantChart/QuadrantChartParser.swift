@@ -18,36 +18,11 @@ enum QuadrantChartParser {
         var diagram = QuadrantChartDiagram()
         diagram.accessibility = source.accessibility
         for line in source.lines {
-            for (text, offset) in statements(in: line.text) {
+            for (text, offset) in line.text.chartStatements() {
                 try statement(text, at: line.location(atOffset: offset), into: &diagram)
             }
         }
         return diagram
-    }
-
-    /// Splits a line at `;` separators outside quotes, dropping a trailing
-    /// comment, and reports each statement's column offset.
-    static func statements(in line: String) -> [(String, Int)] {
-        let text = line.strippingInlineComment()
-        var result: [(String, Int)] = []
-        var current = "", start = 0, offset = 0, quoted = false
-        for c in text {
-            if c == "\"" { quoted.toggle() }
-            if c == ";", !quoted {
-                result.append((current, start))
-                current = ""
-                start = offset + 1
-            } else {
-                current.append(c)
-            }
-            offset += 1
-        }
-        result.append((current, start))
-        return result.compactMap { text, start in
-            let leading = text.prefix { $0 == " " || $0 == "\t" }.count
-            let trimmed = text.trimmingWhitespace()
-            return trimmed.isEmpty ? nil : (trimmed, start + leading)
-        }
     }
 
     private static func keyword(_ word: String, in text: String) -> String? {
