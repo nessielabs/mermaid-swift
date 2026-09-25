@@ -82,7 +82,7 @@ hover effects are parsed but not drawn, and icons from external icon packs
 Add the package to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/nessielabs/mermaid-swift.git", branch: "main")
+.package(url: "https://github.com/nessielabs/mermaid-swift.git", from: "0.1.4")
 ```
 
 and depend on the `Mermaid` product. Requires Swift 6 and macOS 13, iOS 16,
