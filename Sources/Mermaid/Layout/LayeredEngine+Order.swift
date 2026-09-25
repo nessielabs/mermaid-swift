@@ -51,7 +51,12 @@ extension LayeredEngine {
                 chainKeys[edge, default: (0, 0)].count += 1
             }
             for r in layers.indices {
-                var keys = positionKeys(layers[r])
+                // Every key uses the same normalized 0...1000 scale as the chain
+                // and cluster keys; mixing raw positions with normalized keys
+                // pushed long edges to one end of each rank and made them
+                // zig-zag from side to side.
+                let size = Double(max(1, layers[r].count))
+                var keys = Dictionary(uniqueKeysWithValues: layers[r].map { ($0, Double(vertices[$0].order) / size * 1000) })
                 for v in layers[r] {
                     if let edge = chainEdge(v), let k = chainKeys[edge] { keys[v] = k.sum / k.count * 1000 }
                 }
