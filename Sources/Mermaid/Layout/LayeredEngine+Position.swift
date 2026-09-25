@@ -86,10 +86,11 @@ extension LayeredEngine {
                                      reverse: [Int: [Int: Double]]) {
         var chains: [Int: [Int]] = [:]
         for v in vertices.indices {
-            switch vertices[v].kind {
-            case .dummy(let edge), .label(let edge): chains[edge, default: []].append(v)
-            default: continue
-            }
+            // Label slots are left where positioning put them: the route may
+            // pass anywhere through a label, so the bends on either side of it
+            // form one run and can share a column across the label.
+            guard case .dummy(let edge) = vertices[v].kind else { continue }
+            chains[edge, default: []].append(v)
         }
         func bounds(_ v: Int) -> ClosedRange<Double> {
             let lo = (reverse[v] ?? [:]).map { x[$0.key] + $0.value }.max() ?? -.infinity

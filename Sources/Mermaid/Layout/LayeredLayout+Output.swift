@@ -64,6 +64,16 @@ extension LayeredComputation {
         return result
     }
 
+    /// The x at which an edge crosses its label: the column its neighboring
+    /// bends share when that column still passes through the label (keeping
+    /// the edge straight), otherwise the label's center.
+    static func lineX(throughLabelAt labelX: Double, width: Double, neighborColumns: [Double]) -> Double {
+        guard let column = neighborColumns.first,
+              neighborColumns.allSatisfy({ abs($0 - column) < 0.5 }),
+              abs(column - labelX) <= width / 2 - 6 else { return labelX }
+        return column
+    }
+
     func clustersInnermostFirst() -> [Int] {
         engine.clusterParent.indices.sorted { engine.ancestry($0).count > engine.ancestry($1).count }
     }
@@ -133,15 +143,25 @@ extension LayeredComputation {
             if let exit = ports[e]?.exit { points.append(screen(exit)) }
             var labelCenter: Point?
             let ascending = vertices[chain[0]].rank < vertices[chain[chain.count - 1]].rank
-            for v in chain.dropFirst().dropLast() {
+            let bends = Array(chain.dropFirst().dropLast())
+            for (i, v) in bends.enumerated() {
                 let vertex = vertices[v]
                 let center = Point(vertex.x, vertex.y)
                 let half = (bandHeight[vertex.rank] ?? 0) / 2
-                if case .label = vertex.kind { labelCenter = screen(center) }
-                guard half > 1 else { points.append(screen(center)); continue }
-                points.append(screen(Point(vertex.x, vertex.y + (ascending ? -half : half))))
-                if case .label = vertex.kind { points.append(screen(center)) }
-                points.append(screen(Point(vertex.x, vertex.y + (ascending ? half : -half))))
+                var x = vertex.x
+                if case .label = vertex.kind {
+                    labelCenter = screen(center)
+                    // Pass straight through the label when the neighboring
+                    // bends' column still crosses it, instead of jogging over
+                    // to the label's center.
+                    let neighbors = [i > 0 ? bends[i - 1] : nil, i + 1 < bends.count ? bends[i + 1] : nil]
+                        .compactMap { $0 }.filter { if case .dummy = vertices[$0].kind { true } else { false } }
+                    x = Self.lineX(throughLabelAt: vertex.x, width: vertex.width, neighborColumns: neighbors.map { vertices[$0].x })
+                }
+                guard half > 1 else { points.append(screen(Point(x, vertex.y))); continue }
+                points.append(screen(Point(x, vertex.y + (ascending ? -half : half))))
+                if case .label = vertex.kind, x == vertex.x { points.append(screen(center)) }
+                points.append(screen(Point(x, vertex.y + (ascending ? half : -half))))
             }
             if let entry = ports[e]?.entry { points.append(screen(entry)) }
             let last = vertices[chain[chain.count - 1]]
