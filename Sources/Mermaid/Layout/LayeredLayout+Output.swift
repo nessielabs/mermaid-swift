@@ -87,10 +87,34 @@ extension LayeredComputation {
         var clusters: [String: Rect] = [:]
         for (c, r) in clusterRects { clusters[graph.clusters[c].id] = screenRect(Point(r.minX, r.minY), Point(r.maxX, r.maxY)) }
 
+        // Bends run vertically through their rank's whole band: separation
+        // constraints keep bends clear of nodes within a rank, so routes
+        // then only move sideways in the gaps between ranks and never cut
+        // through a tall neighbor.
+        var bandHeight: [Int: Double] = [:]
+        for v in vertices { bandHeight[v.rank] = max(bandHeight[v.rank] ?? 0, v.height) }
         var routes = chains.map { chain -> LayeredLayout.Route in
-            let label = chain.first { if case .label = vertices[$0].kind { true } else { false } }
-            return .init(points: chain.map { screen(Point(vertices[$0].x, vertices[$0].y)) },
-                         labelCenter: label.map { screen(Point(vertices[$0].x, vertices[$0].y)) })
+            var points: [Point] = []
+            var labelCenter: Point?
+            for (i, v) in chain.enumerated() {
+                let vertex = vertices[v]
+                let center = Point(vertex.x, vertex.y)
+                let half = (bandHeight[vertex.rank] ?? 0) / 2
+                guard i > 0, i < chain.count - 1, half > 1 else {
+                    points.append(screen(center))
+                    continue
+                }
+                let ascending = vertices[chain[0]].rank < vertices[chain[chain.count - 1]].rank
+                let entry = Point(vertex.x, vertex.y + (ascending ? -half : half))
+                let exit = Point(vertex.x, vertex.y + (ascending ? half : -half))
+                points.append(screen(entry))
+                if case .label = vertex.kind {
+                    labelCenter = screen(center)
+                    points.append(screen(center))
+                }
+                points.append(screen(exit))
+            }
+            return .init(points: points, labelCenter: labelCenter)
         }
         for e in loops {
             guard let frame = nodes[graph.edges[e].from] ?? clusters[graph.edges[e].from] else { continue }
