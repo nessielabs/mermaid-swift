@@ -79,7 +79,7 @@ struct LayeredComputation {
         if !engine.assignX(layers: layers, segments: segments, spacing: spacing, useClusters: true) {
             _ = engine.assignX(layers: layers, segments: segments, spacing: spacing, useClusters: false)
         }
-        assignY(layers: layers, spans: spans, spacing: spacing)
+        assignY(layers: layers, spans: spans, spacing: spacing, segments: segments)
         return output(chains: chains, loops: loops, spans: spans)
     }
 

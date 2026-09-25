@@ -1,7 +1,16 @@
 extension LayeredComputation {
     /// Places ranks along the flow, leaving room for cluster padding and
     /// titles where clusters begin and end.
-    mutating func assignY(layers: [[Int]], spans: [ClosedRange<Int>?], spacing: LayeredEngine.Spacing) {
+    mutating func assignY(layers: [[Int]], spans: [ClosedRange<Int>?], spacing: LayeredEngine.Spacing,
+                          segments: [LayeredEngine.Segment]) {
+        // A gap whose edges travel far sideways gets taller, so those edges
+        // cross it as steep, readable curves instead of near-flat diagonals.
+        var lateral = [Int: Double]()
+        for segment in segments {
+            let upper = engine.vertices[segment.upper], lower = engine.vertices[segment.lower]
+            let gap = min(upper.rank, lower.rank)
+            lateral[gap] = max(lateral[gap] ?? 0, abs(upper.x - lower.x))
+        }
         let titleAtStart = graph.direction == .topToBottom
         let titleAtEnd = graph.direction == .bottomToTop
         var startInset = [Double](repeating: 0, count: spans.count)
@@ -27,7 +36,9 @@ extension LayeredComputation {
             let height = layer.map { engine.vertices[$0].height }.max() ?? 0
             y += before[r] + height / 2
             for v in layer { engine.vertices[v].y = y }
-            y += height / 2 + after[r] + spacing.rank
+            let sideways = lateral[r] ?? 0
+            let extra = min(max(0, sideways * 0.18 - spacing.rank), spacing.rank * 2.5)
+            y += height / 2 + after[r] + spacing.rank + extra
         }
     }
 
