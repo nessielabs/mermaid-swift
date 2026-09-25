@@ -57,8 +57,7 @@ enum FlowchartNodeScanner {
             if c.isWordCharacter {
                 id.append(c)
                 s.advance()
-            } else if c == "-", !id.isEmpty, let next = s.peek(1), next.isWordCharacter, next != "o" || s.peek(2)?.isWordCharacter == true,
-                      next != "x" || s.peek(2)?.isWordCharacter == true {
+            } else if c == "-", !id.isEmpty, let next = s.peek(1), next.isWordCharacter {
                 id.append(c)
                 s.advance()
             } else {
