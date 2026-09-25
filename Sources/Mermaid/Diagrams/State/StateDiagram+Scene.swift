@@ -199,13 +199,28 @@ struct StateSceneBuilder {
         return Size(width, height)
     }
 
+    /// Whether a state's notes go above (`left of`) and below (`right of`)
+    /// it rather than beside it. In horizontal flows transitions enter and
+    /// leave through a state's sides, so notes turn with the flow, like
+    /// fork bars do.
+    func notesTurn(_ id: String) -> Bool {
+        direction(ofContainer: diagram.state(id)?.parent).isHorizontal
+    }
+
+    /// Swaps width and height when `turned`, mapping between screen space
+    /// and the frame in which notes always sit left and right.
+    static func turn(_ size: Size, _ turned: Bool) -> Size { turned ? Size(size.height, size.width) : size }
+
     /// The layout size of a simple state with its attached notes.
     func nodeSize(_ id: String, _ m: Measured) -> Size {
         guard let box = m.boxes[id] else { return .zero }
         guard let notes = m.attached[id] else { return box.size }
-        let left = column(notes.left, sizes: m.noteSizes), right = column(notes.right, sizes: m.noteSizes)
+        let turned = notesTurn(id)
+        let sizes = m.noteSizes.map { Self.turn($0, turned) }
+        let state = Self.turn(box.size, turned)
+        let left = column(notes.left, sizes: sizes), right = column(notes.right, sizes: sizes)
         let side = max(left.width, right.width) + noteGap
-        return Size(box.size.width + 2 * side, max(box.size.height, left.height, right.height))
+        return Self.turn(Size(state.width + 2 * side, max(state.height, left.height, right.height)), turned)
     }
 
     static func noteNodeID(_ index: Int) -> String { "note:\(index)" }

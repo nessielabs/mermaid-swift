@@ -162,26 +162,38 @@ extension StateSceneBuilder {
     var notePaint: ShapePaint { ShapePaint(fill: palette.noteFill, stroke: palette.noteBorder, text: palette.noteText) }
 
     /// Notes beside simple states, stacked in columns to the state's left and
-    /// right, with the dashed links that tie them to the state.
+    /// right (above and below it in horizontal flows), with the dashed links
+    /// that tie them to the state.
     func attachedNotes(_ m: Measured, layout: LayeredLayout) -> (links: [SceneItem], boxes: [SceneItem]) {
         var links: [SceneItem] = [], boxes: [SceneItem] = []
         let dash = Stroke(palette.transition, width: 1, dash: [5, 5])
         for state in diagram.states {
             guard let sides = m.attached[state.id], let frame = stateFrame(state.id, m, layout) else { continue }
+            // Work relative to the state's center in the frame where notes sit
+            // left and right, then map back to screen space.
+            let turned = notesTurn(state.id)
+            let sizes = m.noteSizes.map { Self.turn($0, turned) }
+            let half = Self.turn(frame.size, turned)
+            let (hw, hh) = (half.width / 2, half.height / 2)
+            func screen(_ p: Point) -> Point {
+                turned ? Point(frame.midX + p.y, frame.midY + p.x) : Point(frame.midX + p.x, frame.midY + p.y)
+            }
             for (notes, right) in [(sides.right, true), (sides.left, false)] where !notes.isEmpty {
-                var y = frame.midY - column(notes, sizes: m.noteSizes).height / 2
+                var y = -column(notes, sizes: sizes).height / 2
                 for i in notes {
-                    let size = m.noteSizes[i]
-                    let x = right ? frame.maxX + noteGap : frame.minX - noteGap - size.width
+                    let size = sizes[i]
+                    let x = right ? hw + noteGap : -hw - noteGap - size.width
                     let rect = Rect(x: x, y: y, width: size.width, height: size.height)
                     y += size.height + 8
-                    boxes.append(StateShapes.note(frame: rect, text: m.noteTexts[i], paint: notePaint,
+                    let corners = [screen(rect.origin), screen(Point(rect.maxX, rect.maxY))]
+                    boxes.append(StateShapes.note(frame: Rect.bounding(corners)!, text: m.noteTexts[i], paint: notePaint,
                                                   id: diagram.notes[i].id))
-                    // A level link where the note and state overlap vertically.
-                    let level = min(max(rect.midY, frame.minY + 4), frame.maxY - 4)
-                    let from = Point(right ? frame.maxX : frame.minX, rect.minY <= level && level <= rect.maxY ? level : frame.midY)
-                    let to = Point(right ? rect.minX : rect.maxX, rect.minY <= level && level <= rect.maxY ? level : rect.midY)
-                    links.append(.shape(ShapeItem(.polyline([from, to]), stroke: dash)))
+                    // A level link where the note and state overlap.
+                    let level = min(max(rect.midY, -hh + 4), hh - 4)
+                    let overlaps = rect.minY <= level && level <= rect.maxY
+                    let from = Point(right ? hw : -hw, overlaps ? level : 0)
+                    let to = Point(right ? rect.minX : rect.maxX, overlaps ? level : rect.midY)
+                    links.append(.shape(ShapeItem(.polyline([screen(from), screen(to)]), stroke: dash)))
                 }
             }
         }
