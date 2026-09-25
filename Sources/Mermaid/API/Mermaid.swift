@@ -115,6 +115,7 @@ struct DiagramRegistry {
         Entry(type: .packet, keywords: ["packet", "packet-beta"]) { try PacketParser.parse($0) },
         Entry(type: .treemap, keywords: ["treemap", "treemap-beta"]) { try TreemapParser.parse($0) },
         Entry(type: .gitGraph, keywords: ["gitGraph"]) { try GitGraphParser.parse($0) },
+        Entry(type: .mindmap, keywords: ["mindmap"]) { try MindmapParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
