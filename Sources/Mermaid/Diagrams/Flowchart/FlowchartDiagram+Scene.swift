@@ -71,24 +71,14 @@ struct FlowchartSceneBuilder {
         }
         let layout = LayeredLayout.compute(graph)
 
-        var titleHeight = 0.0
         var items: [SceneItem] = []
-        if let title = context.title, !title.isEmpty {
-            let block = context.label(title, size: 18)
-            titleHeight = block.height + 10
-            let width = max(layout.size.width + 2 * margin, block.width + 2 * margin)
-            items.append(.text(TextItem(block, centeredAt: Point(width / 2, margin + block.height / 2), color: theme.titleColor)))
-        }
-        let dx = margin, dy = margin + titleHeight
-        func place(_ r: Rect) -> Rect { r.offsetBy(dx: dx, dy: dy) }
-
         let depth = { (id: String) -> Int in
             var d = 0, current = diagram.subgraphs.first { $0.id == id }?.parent
             while let p = current { d += 1; current = diagram.subgraphs.first { $0.id == p }?.parent }
             return d
         }
         for sg in diagram.subgraphs.sorted(by: { depth($0.id) < depth($1.id) }) {
-            guard let frame = layout.clusters[sg.id].map(place), let title = subgraphTitles[sg.id] else { continue }
+            guard let frame = layout.clusters[sg.id], let title = subgraphTitles[sg.id] else { continue }
             let paint = ShapePaint(fill: theme.clusterBkg, stroke: theme.clusterBorder, text: theme.titleColor)
                 .applying(subgraphStyles[sg.id] ?? ElementStyle())
             var group: [SceneItem] = [.shape(ShapeItem(.rect(frame), fill: paint.fill,
@@ -100,12 +90,12 @@ struct FlowchartSceneBuilder {
 
         let nodeByID = Dictionary(diagram.nodes.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         func outline(_ id: String) -> [Point]? {
-            if let frame = layout.nodes[id].map(place), let node = nodeByID[id] { return node.shape.outline(in: frame) }
-            return layout.clusters[id].map { EdgeGeometry.rectOutline(place($0)) }
+            if let frame = layout.nodes[id], let node = nodeByID[id] { return node.shape.outline(in: frame) }
+            return layout.clusters[id].map(EdgeGeometry.rectOutline)
         }
         let defaultCurve = diagram.defaultLinkCurve ?? config["curve"]?.stringValue.flatMap(Curve.init(name:)) ?? .basis
         for (i, link) in diagram.links.enumerated() where link.stroke != .invisible {
-            let route = layout.edges[i].points.map { Point($0.x + dx, $0.y + dy) }
+            let route = layout.edges[i].points
             let style = diagram.defaultLinkStyle.overlaid(with: diagram.linkStyles[i] ?? ElementStyle())
             var width = link.stroke == .thick ? 3.5 : 1.5
             if let override = style.strokeWidth { width = override }
@@ -115,21 +105,19 @@ struct FlowchartSceneBuilder {
                 color: style.stroke ?? theme.lineColor, width: width,
                 dash: style.strokeDash ?? (link.stroke == .dotted ? [3, 3] : []),
                 startMarker: link.startMarker, endMarker: link.endMarker,
-                label: linkLabels[i], labelCenter: layout.edges[i].labelCenter.map { Point($0.x + dx, $0.y + dy) },
+                label: linkLabels[i], labelCenter: layout.edges[i].labelCenter,
                 labelColor: style.textColor ?? theme.textColor, labelBackground: theme.edgeLabelBackground,
                 background: theme.background, id: link.id ?? "L_\(link.from)_\(link.to)_\(i)")
             items += connector.items()
         }
 
         for node in diagram.nodes {
-            guard let frame = layout.nodes[node.id].map(place) else { continue }
+            guard let frame = layout.nodes[node.id] else { continue }
             let paint = ShapePaint(fill: theme.mainBkg, stroke: theme.nodeBorder, text: theme.nodeTextColor, solid: theme.lineColor)
                 .applying(nodeStyles[node.id] ?? ElementStyle())
             items.append(ShapeRenderer.items(node.shape, frame: frame, label: nodeLabels[node.id], paint: paint, id: node.id))
         }
 
-        let width = max(layout.size.width + 2 * margin, items.isEmpty ? 0 : 2 * margin)
-        let titleWidth = context.title.map { context.label($0, size: 18).width + 2 * margin } ?? 0
-        return Scene(size: Size(max(width, titleWidth), layout.size.height + 2 * margin + titleHeight), items: items)
+        return DiagramCanvas(context: context, margin: margin).scene(content: items, size: layout.size)
     }
 }

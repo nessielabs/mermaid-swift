@@ -17,7 +17,7 @@ struct Connector {
     var id: String?
 
     func items() -> [SceneItem] {
-        var points = EdgeGeometry.clip(route, source: sourceOutline, target: targetOutline)
+        var points = Self.removingNearDuplicates(EdgeGeometry.clip(route, source: sourceOutline, target: targetOutline))
         guard points.count >= 2 else { return [] }
         let tip = points[points.count - 1], tail = points[0]
         let endDirection = tip - points[points.count - 2]
@@ -52,6 +52,21 @@ struct Connector {
         if case .move = tail.elements.first { tail = Path.fromElements(Array(tail.elements.dropFirst())) }
         path.append(tail)
         return path
+    }
+
+    /// Drops points within a pixel of their predecessor (keeping the true
+    /// endpoints), so a route port landing on a shape's outline cannot leave a
+    /// zero-length final segment with no direction for its marker.
+    static func removingNearDuplicates(_ points: [Point]) -> [Point] {
+        guard points.count > 2 else { return points }
+        var result = [points[0]]
+        for p in points.dropFirst().dropLast() where p.distance(to: result[result.count - 1]) > 1 {
+            result.append(p)
+        }
+        let last = points[points.count - 1]
+        if result.count > 1, last.distance(to: result[result.count - 1]) <= 1 { result.removeLast() }
+        result.append(last)
+        return result
     }
 
     /// The point halfway along a polyline's length.
