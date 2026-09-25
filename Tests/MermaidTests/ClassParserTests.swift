@@ -147,4 +147,112 @@ struct ClassParserTests {
         #expect(d.relations[3].from == "A" && d.relations[3].to == "B")
         #expect(d.class("bar") == nil && d.class("foo") == nil && d.class("A") != nil)
     }
+
+    @Test func namespacesNestByDotsAndSyntax() throws {
+        let d = try parse("""
+        namespace Platform {
+            namespace Auth["Authentication"] {
+                class UserService
+            }
+            class Gateway
+            note "platform note"
+        }
+        namespace Company.Engineering.Backend {
+            class Developer
+        }
+        namespace Company {
+            class CEO
+        }
+        class Outside
+        """)
+        let ids = d.namespaces.map(\.id)
+        #expect(ids == ["Platform", "Platform.Auth", "Company", "Company.Engineering", "Company.Engineering.Backend"])
+        let auth = try #require(d.namespaces.first { $0.id == "Platform.Auth" })
+        #expect(auth.label == "Authentication" && auth.parent == "Platform" && auth.isExplicit)
+        let engineering = try #require(d.namespaces.first { $0.id == "Company.Engineering" })
+        #expect(!engineering.isExplicit && engineering.label == "Engineering")
+        #expect(d.namespaces.first { $0.id == "Company" }?.isExplicit == true)
+        #expect(d.class("UserService")?.namespace == "Platform.Auth")
+        #expect(d.class("Gateway")?.namespace == "Platform")
+        #expect(d.class("Developer")?.namespace == "Company.Engineering.Backend")
+        #expect(d.class("Outside")?.namespace == nil)
+        #expect(d.notes.first?.namespace == "Platform")
+    }
+
+    @Test func notes() throws {
+        let d = try parse("""
+        note "This is a general note"
+        note for MyClass "can fly<br>can swim"
+        class MyClass
+        """)
+        #expect(d.notes.map(\.id) == ["note0", "note1"])
+        #expect(d.notes[0].target == nil && d.notes[0].text == "This is a general note")
+        #expect(d.notes[1].target == "MyClass" && d.notes[1].text == "can fly<br>can swim")
+    }
+
+    @Test func directions() throws {
+        #expect(try parse("A").direction == .topToBottom)
+        for (word, direction) in [("LR", LayeredGraph.Direction.leftToRight), ("RL", .rightToLeft),
+                                  ("BT", .bottomToTop), ("TB", .topToBottom)] {
+            #expect(try parse("direction \(word)\nA --> B").direction == direction)
+        }
+    }
+
+    @Test func stylingStatements() throws {
+        let d = try parse("""
+        style Animal fill:#f9f,stroke:#333,stroke-width:4px
+        class Animal:::pink
+        class Mineral
+        cssClass "Mineral,Animal" hot;
+        classDef default fill:#f96,color:red
+        classDef pink,hot color:#f9f;
+        """)
+        let animal = try #require(d.class("Animal"))
+        #expect(animal.cssClasses == ["pink", "hot"])
+        #expect(animal.style.fill == Color(css: "#f9f") && animal.style.strokeWidth == 4)
+        #expect(d.class("Mineral")?.cssClasses == ["hot"])
+        #expect(d.classDefinitions["default"]?.textColor == Color(css: "red"))
+        #expect(d.classDefinitions["pink"]?.textColor == Color(css: "#f9f"))
+        #expect(d.classDefinitions["hot"] == d.classDefinitions["pink"])
+    }
+
+    @Test func interactionsAreRecorded() throws {
+        let d = try parse("""
+        class Shape
+        class Shape2
+        class Class01
+        class Class03
+        link Shape "https://www.github.com" "This is a tooltip for a link"
+        click Shape2 href "https://example.com" "tip" _self
+        callback Class01 "callbackFunction" "Callback tooltip"
+        click Class03 call callbackFunction("x", 2) "Callback tooltip"
+        click Missing href "https://ignored"
+        """)
+        #expect(d.class("Shape")?.link == "https://www.github.com")
+        #expect(d.class("Shape")?.tooltip == "This is a tooltip for a link")
+        #expect(d.class("Shape")?.linkTarget == "_blank")
+        #expect(d.class("Shape2")?.linkTarget == "_self")
+        #expect(d.class("Class01")?.callback == "callbackFunction")
+        #expect(d.class("Class03")?.callback == "callbackFunction" && d.class("Class03")?.tooltip == "Callback tooltip")
+        #expect(d.class("Missing") == nil)
+    }
+
+    @Test func commentsAndAccessibility() throws {
+        let d = try parse("""
+        accTitle: Shapes
+        accDescr: A shape hierarchy
+        %% class Hidden
+        class Shape { %% not a comment inside bodies? it is
+            draw()
+        }
+        A --> B %% trailing comment
+        """)
+        #expect(d.accessibility.title == "Shapes" && d.accessibility.description == "A shape hierarchy")
+        #expect(d.class("Hidden") == nil)
+        #expect(d.relations.count == 1 && d.relations[0].to == "B")
+    }
+
+    @Test func bareClassNamesDeclareClasses() throws {
+        #expect(try parse("Lonely").classes.map(\.id) == ["Lonely"])
+    }
 }
