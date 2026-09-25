@@ -41,6 +41,7 @@ struct SequenceLayoutBuilder {
         var builder = SequenceLayoutBuilder(diagram: diagram, settings: settings, measurer: measurer)
         builder.measureColumns()
         builder.placeColumns()
+        builder.layoutVertically()
         return builder.layout
     }
 
