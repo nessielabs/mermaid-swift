@@ -142,9 +142,6 @@ extension Theme {
             "primaryTextColor": "#111111", "lineColor": "#666666", "textColor": "#333333",
             "mainBkg": "#eeeeee", "nodeBorder": "#999999", "clusterBkg": "#fafafa", "clusterBorder": "#707070",
             "titleColor": "#333333", "edgeLabelBackground": "#ffffff", "noteBorderColor": "#999999",
-            "cScale0": "#555", "cScale1": "#F4F4F4", "cScale2": "#555", "cScale3": "#BBB", "cScale4": "#777",
-            "cScale5": "#999", "cScale6": "#DDD", "cScale7": "#FFF", "cScale8": "#DDD", "cScale9": "#BBB",
-            "cScale10": "#999", "cScale11": "#777",
         ],
         .dark: [
             "background": "#333333", "primaryColor": "#1f2020", "secondaryColor": "#474949",
@@ -152,10 +149,6 @@ extension Theme {
             "textColor": "#cccccc", "mainBkg": "#1f2020", "nodeBorder": "#cccccc", "clusterBkg": "#474949",
             "clusterBorder": "rgba(255, 255, 255, 0.25)", "titleColor": "#F9FFFE", "edgeLabelBackground": "#585858",
             "noteBkgColor": "#474949", "noteTextColor": "#e0dfdf", "noteBorderColor": "#cccccc",
-            // mermaid.js hard-codes the dark section scale after cScale0.
-            "cScale1": "#0b0000", "cScale2": "#4d1037", "cScale3": "#3f5258", "cScale4": "#4f2f1b",
-            "cScale5": "#6e0a0a", "cScale6": "#3b0048", "cScale7": "#995a01", "cScale8": "#154706",
-            "cScale9": "#161722", "cScale10": "#00296f", "cScale11": "#01629c",
         ],
         .forest: [
             "primaryColor": "#cde498", "secondaryColor": "#cdffb2", "tertiaryColor": "#f4f4f4",
