@@ -109,6 +109,7 @@ struct DiagramRegistry {
         Entry(type: .kanban, keywords: ["kanban"]) { try KanbanParser.parse($0) },
         Entry(type: .pie, keywords: ["pie"]) { try PieParser.parse($0) },
         Entry(type: .quadrantChart, keywords: ["quadrantChart"]) { try QuadrantChartParser.parse($0) },
+        Entry(type: .xyChart, keywords: ["xychart", "xychart-beta"]) { try XYChartParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
