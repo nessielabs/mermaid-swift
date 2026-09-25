@@ -107,6 +107,7 @@ struct DiagramRegistry {
         Entry(type: .timeline, keywords: ["timeline"]) { try TimelineParser.parse($0) },
         Entry(type: .journey, keywords: ["journey"]) { try JourneyParser.parse($0) },
         Entry(type: .kanban, keywords: ["kanban"]) { try KanbanParser.parse($0) },
+        Entry(type: .pie, keywords: ["pie"]) { try PieParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
