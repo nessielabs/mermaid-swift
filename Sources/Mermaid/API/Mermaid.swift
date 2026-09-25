@@ -99,6 +99,7 @@ struct DiagramRegistry {
         Entry(type: .classDiagram, keywords: ["classDiagram", "classDiagram-v2"]) { try ClassParser.parse($0) },
         Entry(type: .entityRelationship, keywords: ["erDiagram"]) { try EntityRelationshipParser.parse($0) },
         Entry(type: .requirement, keywords: ["requirementDiagram"]) { try RequirementParser.parse($0) },
+        Entry(type: .sequence, keywords: ["sequenceDiagram"]) { try SequenceParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
