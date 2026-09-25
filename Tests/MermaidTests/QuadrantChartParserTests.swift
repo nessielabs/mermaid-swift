@@ -32,8 +32,9 @@ struct QuadrantChartParserTests {
     }
 
     @Test func markdownStringsKeepTheirBackticks() throws {
-        let d = try parse(#"quadrant-1 "`**Plan**`""#)
+        let d = try parse(#"quadrant-1 "`**Plan**`""# + "\n" + #"title "`**Effort** vs _impact_`""#)
         #expect(d.quadrantLabels[0] == "`**Plan**`")
+        #expect(d.title == "`**Effort** vs _impact_`")
     }
 
     @Test func pointsWithClassesAndInlineStyles() throws {

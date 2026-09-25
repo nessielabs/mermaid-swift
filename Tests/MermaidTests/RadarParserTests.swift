@@ -30,6 +30,7 @@ struct RadarParserTests {
     @Test func defaults() throws {
         let d = try parse("radar\n axis a, b, c\n curve x{1, 2, 3}")
         #expect(d.showLegend && d.ticks == 5 && d.max == nil && d.min == 0 && d.graticule == .circle)
+        #expect(try parse("radar-beta\n title \"`**Bold**`\"").title == "`**Bold**`")
         #expect(d.resolvedMax == 3)
     }
 

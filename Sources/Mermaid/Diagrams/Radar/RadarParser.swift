@@ -75,7 +75,7 @@ struct RadarParser {
             guard scanner.isAtEnd || scanner.peek() == " " || scanner.peek() == "\t" || scanner.peek() == "\n" else {
                 throw MermaidError.syntax("Unexpected '\(scanner.peek()!)' after title", at: scanner.location)
             }
-            diagram.title = scanner.read { $0 != "\n" }.strippingInlineComment()
+            diagram.title = scanner.read { $0 != "\n" }.strippingInlineComment().chartTextValue
         case "axis":
             repeat {
                 scanner.skipWhitespace()

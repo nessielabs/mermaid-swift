@@ -35,7 +35,7 @@ enum PieParser {
     private static func statement(_ text: String, at location: SourceLocation,
                                   into diagram: inout PieDiagram, seen: inout Set<String>) throws {
         if text == "title" || text.hasPrefix("title ") || text.hasPrefix("title\t") {
-            diagram.title = String(text.dropFirst(5)).trimmingWhitespace()
+            diagram.title = text.dropFirst(5).chartTextValue
             return
         }
         guard let quote = text.first, quote == "\"" || quote == "'" else {

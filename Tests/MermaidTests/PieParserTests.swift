@@ -27,6 +27,7 @@ struct PieParserTests {
         let separate = try parse("pie showData\n  title Key elements in Product X\n  \"Iron\" :  5")
         #expect(separate.showData && separate.title == "Key elements in Product X")
         #expect(separate.slices == [.init(label: "Iron", value: 5)])
+        #expect(try parse("pie title \"Quoted title\"").title == "Quoted title")
     }
 
     @Test func accessibilityCommentsAndDuplicates() throws {

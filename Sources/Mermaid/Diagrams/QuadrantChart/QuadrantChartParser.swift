@@ -35,7 +35,7 @@ enum QuadrantChartParser {
     private static func statement(_ text: String, at location: SourceLocation,
                                   into diagram: inout QuadrantChartDiagram) throws {
         if let rest = keyword("title", in: text) {
-            diagram.title = rest.trimmingWhitespace()
+            diagram.title = rest.chartTextValue
         } else if let rest = keyword("x-axis", in: text) {
             let (low, high) = try axisTexts(rest, at: location)
             diagram.xAxisLeft = low
