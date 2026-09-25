@@ -153,4 +153,21 @@ struct LayeredLayoutTests {
         let layout = LayeredLayout.compute(g)
         #expect(layout.edges[1].points.last == layout.clusters["S"]!.center)
     }
+
+    @Test func longEdgesPassingAClusterStayOnOneSide() {
+        // A long edge beside a cluster used to zig-zag from one side of each
+        // rank to the other, drawing loops.
+        var g = graph([("L", "M"), ("M", "A"), ("M", "B"), ("A", "S"), ("B", "S"),
+                       ("C3", "K"), ("K", "H"), ("H", "R"), ("L", "R")],
+                      clusters: [.init(id: "S", labelSize: Size(120, 16))],
+                      membership: ["C1": "S", "C2": "S", "C3": "S"])
+        g.edges += [.init(from: "C1", to: "C2"), .init(from: "C2", to: "C3")]
+        let layout = LayeredLayout.compute(g)
+        let box = layout.clusters["S"]!
+        let route = layout.edges[8].points.dropFirst().dropLast()
+        let sides = route.filter { $0.y > box.minY && $0.y < box.maxY }.map { $0.x < box.midX }
+        #expect(!sides.isEmpty)
+        #expect(Set(sides).count == 1, "long edge switches sides of the cluster")
+        #expect(route.allSatisfy { !box.contains($0) })
+    }
 }
