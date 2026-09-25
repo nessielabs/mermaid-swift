@@ -120,4 +120,31 @@ struct GanttLayoutTests {
         #expect(try layout("T : 2024-01-01, 3d").todayX == nil)
         #expect(try layout("todayMarker off\nT : 2024-06-01, 30d").todayX == nil)
     }
+
+    @Test func sceneRendersEveryTaskAndStylesToday() throws {
+        var diagram = try parseGantt("""
+            title Plan
+            todayMarker stroke:#00ff00,stroke-width:5px
+            section S
+            A : a, 2024-06-01, 30d
+            click a href "https://example.com"
+            """)
+        diagram.today = ganttToday
+        let scene = try diagram.scene(in: context)
+        let groups = scene.items.compactMap { item -> GroupItem? in
+            if case .group(let group) = item { return group }
+            return nil
+        }
+        #expect(groups.contains { $0.id == "a" && $0.role == "task" })
+        let today = try #require(groups.first { $0.role == "today" })
+        guard case .shape(let line) = today.items.first else { Issue.record("no today line"); return }
+        #expect(line.stroke?.color == Color(hex: 0x00FF00) && line.stroke?.width == 5)
+        #expect(scene.svg.contains(">Plan</text>"))
+    }
+
+    @Test func registeredWithTheDiagramRegistry() throws {
+        #expect(Mermaid.detectType("gantt\n  T : 2024-01-01, 1d") == .gantt)
+        let error = try #require(throws: MermaidError.self) { try Mermaid.render("gantt\n  T : nope, 1d") }
+        #expect(error.location?.line == 2)
+    }
 }

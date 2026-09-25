@@ -103,6 +103,7 @@ struct DiagramRegistry {
         Entry(type: .state, keywords: ["stateDiagram", "stateDiagram-v2"]) { try StateParser.parse($0) },
         Entry(type: .architecture, keywords: ["architecture-beta", "architecture"]) { try ArchitectureParser.parse($0) },
         Entry(type: .c4, keywords: C4Diagram.Kind.allCases.map(\.rawValue)) { try C4Parser.parse($0) },
+        Entry(type: .gantt, keywords: ["gantt"]) { try GanttParser.parse($0) },
     ]
 
     static func entry(for keyword: String) -> Entry? {
