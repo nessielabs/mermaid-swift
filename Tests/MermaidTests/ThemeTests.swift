@@ -67,6 +67,17 @@ struct ThemeTests {
         #expect(Theme(.default, variables: ["pie3": "#123456"]).pieColors[2] == Color(css: "#123456"))
     }
 
+    @Test func sectionScalesFollowEachTheme() {
+        #expect(Theme.default.sectionColors[0] == Theme.default.primaryColor.darkened(10))
+        #expect(Theme.default.sectionColors[3] == Theme.default.primaryColor.adjusted(hue: 30).darkened(10))
+        let base = Theme(.base)
+        #expect(base.sectionColors[1] == base.secondaryColor.darkened(25))
+        #expect(Theme.neutral.sectionColors[1] == Color(css: "#F4F4F4"))
+        #expect(Theme.dark.sectionColors[0] == Theme.dark.primaryColor)
+        // Explicit values are used as given.
+        #expect(Theme(.base, variables: ["cScale0": "#ff0000"]).sectionColors[0] == Color(hex: 0xFF0000))
+    }
+
     @Test func darkThemeUsesLightLines() {
         #expect(Theme.dark.background.isDark)
         #expect(!Theme.dark.lineColor.isDark)

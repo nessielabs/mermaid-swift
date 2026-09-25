@@ -142,6 +142,9 @@ extension Theme {
             "primaryTextColor": "#111111", "lineColor": "#666666", "textColor": "#333333",
             "mainBkg": "#eeeeee", "nodeBorder": "#999999", "clusterBkg": "#fafafa", "clusterBorder": "#707070",
             "titleColor": "#333333", "edgeLabelBackground": "#ffffff", "noteBorderColor": "#999999",
+            "cScale0": "#555", "cScale1": "#F4F4F4", "cScale2": "#555", "cScale3": "#BBB", "cScale4": "#777",
+            "cScale5": "#999", "cScale6": "#DDD", "cScale7": "#FFF", "cScale8": "#DDD", "cScale9": "#BBB",
+            "cScale10": "#999", "cScale11": "#777",
         ],
         .dark: [
             "background": "#333333", "primaryColor": "#1f2020", "secondaryColor": "#474949",
