@@ -45,6 +45,10 @@ extension SceneItem {
         switch self {
         case .shape(var shape):
             shape.path = shape.path.offsetBy(dx: dx, dy: dy)
+            shape.gradient?.start.x += dx
+            shape.gradient?.start.y += dy
+            shape.gradient?.end.x += dx
+            shape.gradient?.end.y += dy
             return .shape(shape)
         case .text(var text):
             text.frame = text.frame.offsetBy(dx: dx, dy: dy)

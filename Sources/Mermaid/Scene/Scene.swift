@@ -52,12 +52,46 @@ public struct ShapeItem: Hashable, Sendable {
     public var fill: Color?
     public var stroke: Stroke?
     public var opacity: Double
+    /// A gradient that fills the path instead of `fill` when set.
+    public var gradient: LinearGradient?
 
-    public init(_ path: Path, fill: Color? = nil, stroke: Stroke? = nil, opacity: Double = 1) {
+    public init(_ path: Path, fill: Color? = nil, stroke: Stroke? = nil, opacity: Double = 1,
+                gradient: LinearGradient? = nil) {
         self.path = path
         self.fill = fill
         self.stroke = stroke
         self.opacity = opacity
+        self.gradient = gradient
+    }
+}
+
+/// A linear color ramp between two points in diagram space, such as the
+/// source-to-target blend of a sankey link.
+public struct LinearGradient: Hashable, Sendable {
+    public struct Stop: Hashable, Sendable {
+        /// Position along the gradient axis, 0...1.
+        public var offset: Double
+        public var color: Color
+
+        public init(offset: Double, color: Color) {
+            self.offset = offset
+            self.color = color
+        }
+    }
+
+    public var start: Point
+    public var end: Point
+    public var stops: [Stop]
+
+    public init(start: Point, end: Point, stops: [Stop]) {
+        self.start = start
+        self.end = end
+        self.stops = stops
+    }
+
+    /// A two-color gradient from `start` to `end`.
+    public init(from startColor: Color, at start: Point, to endColor: Color, at end: Point) {
+        self.init(start: start, end: end, stops: [Stop(offset: 0, color: startColor), Stop(offset: 1, color: endColor)])
     }
 }
 

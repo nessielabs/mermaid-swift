@@ -65,3 +65,42 @@ struct RenderTests {
     }
     #endif
 }
+
+@Suite("Gradient fills")
+struct GradientRenderTests {
+    var scene: Scene {
+        let gradient = LinearGradient(from: Color(hex: 0xFF0000), at: Point(0, 0), to: Color(hex: 0x0000FF), at: Point(100, 0))
+        return Scene(size: Size(100, 10), items: [
+            .shape(ShapeItem(.rect(Rect(x: 0, y: 0, width: 100, height: 10)), gradient: gradient)),
+        ])
+    }
+
+    @Test func svgDefinesAndReferencesTheGradient() throws {
+        let svg = scene.svg
+        let id = SVGRenderer.gradientIdentifier(try #require(scene.items.first.flatMap {
+            if case .shape(let shape) = $0 { return shape.gradient } else { return nil } }))
+        #expect(svg.contains("<linearGradient id=\"\(id)\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"0\" x2=\"100\" y2=\"0\">"))
+        #expect(svg.contains("<stop offset=\"0\" stop-color=\"#ff0000\"/>"))
+        #expect(svg.contains("fill=\"url(#\(id))\""))
+        // Deterministic across renders.
+        #expect(svg == scene.svg)
+    }
+
+    @Test func offsettingMovesTheGradientAxis() throws {
+        let moved = try #require(scene.items.first).offsetBy(dx: 5, dy: 7)
+        guard case .shape(let shape) = moved else { Issue.record("expected a shape"); return }
+        #expect(shape.gradient?.start == Point(5, 7))
+        #expect(shape.gradient?.end == Point(105, 7))
+    }
+
+    #if canImport(CoreGraphics) && canImport(CoreText)
+    @Test func bitmapBlendsAcrossTheAxis() throws {
+        let image = try #require(scene.cgImage(scale: 1))
+        let pixels = try #require(RenderTests.rgba(image))
+        func pixel(_ x: Int) -> (Int, Int) { let i = (5 * 100 + x) * 4; return (Int(pixels[i]), Int(pixels[i + 2])) }
+        #expect(pixel(2).0 > 230 && pixel(2).1 < 25)
+        #expect(pixel(97).0 < 25 && pixel(97).1 > 230)
+        #expect(abs(pixel(50).0 - pixel(50).1) < 20)
+    }
+    #endif
+}

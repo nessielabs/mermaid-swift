@@ -34,8 +34,26 @@ public enum SVGRenderer {
     }
 
     private static func write(_ shape: ShapeItem, into out: inout String) {
+        var gradientID: String?
+        if let gradient = shape.gradient {
+            let id = gradientIdentifier(gradient)
+            gradientID = id
+            out += "<defs><linearGradient id=\"\(id)\" gradientUnits=\"userSpaceOnUse\""
+            out += " x1=\"\(n(gradient.start.x))\" y1=\"\(n(gradient.start.y))\""
+            out += " x2=\"\(n(gradient.end.x))\" y2=\"\(n(gradient.end.y))\">"
+            for stop in gradient.stops {
+                out += "<stop offset=\"\(n(stop.offset))\" stop-color=\"\(stop.color.withAlpha(1).hexString)\""
+                if stop.color.alpha < 1 { out += " stop-opacity=\"\(n(stop.color.alpha))\"" }
+                out += "/>"
+            }
+            out += "</linearGradient></defs>"
+        }
         out += "<path d=\"\(pathData(shape.path))\""
-        out += shape.fill.map { paint("fill", $0) } ?? " fill=\"none\""
+        if let gradientID {
+            out += " fill=\"url(#\(gradientID))\""
+        } else {
+            out += shape.fill.map { paint("fill", $0) } ?? " fill=\"none\""
+        }
         if let stroke = shape.stroke {
             out += paint("stroke", stroke.color) + " stroke-width=\"\(n(stroke.width))\""
             if !stroke.dash.isEmpty { out += " stroke-dasharray=\"\(stroke.dash.map(n).joined(separator: " "))\"" }
@@ -64,6 +82,20 @@ public enum SVGRenderer {
             }
         }
         out += "</g>"
+    }
+
+    /// A deterministic id derived from the gradient's content (FNV-1a), so
+    /// identical documents serialize identically and identical gradients
+    /// may share a definition.
+    static func gradientIdentifier(_ gradient: LinearGradient) -> String {
+        var text = "\(n(gradient.start.x)),\(n(gradient.start.y)),\(n(gradient.end.x)),\(n(gradient.end.y))"
+        for stop in gradient.stops { text += ";\(n(stop.offset))\(stop.color.hexString)" }
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in text.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 0x100000001b3
+        }
+        return "gradient-" + String(hash, radix: 36)
     }
 
     static func pathData(_ path: Path) -> String {

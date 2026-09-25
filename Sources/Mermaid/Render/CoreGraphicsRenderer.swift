@@ -48,7 +48,15 @@ public enum CoreGraphicsRenderer {
         context.saveGState()
         defer { context.restoreGState() }
         context.setAlpha(CGFloat(shape.opacity))
-        if let fill = shape.fill, !fill.isClear {
+        if let gradient = shape.gradient, let cgGradient = gradient.cgGradient {
+            context.saveGState()
+            context.addPath(path)
+            context.clip()
+            context.drawLinearGradient(cgGradient, start: CGPoint(x: gradient.start.x, y: gradient.start.y),
+                                       end: CGPoint(x: gradient.end.x, y: gradient.end.y),
+                                       options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            context.restoreGState()
+        } else if let fill = shape.fill, !fill.isClear {
             context.addPath(path)
             context.setFillColor(fill.cgColor)
             context.fillPath()
@@ -102,6 +110,14 @@ public enum CoreGraphicsRenderer {
 
 extension Color {
     var cgColor: CGColor { CGColor(srgbRed: red, green: green, blue: blue, alpha: alpha) }
+}
+
+extension LinearGradient {
+    var cgGradient: CGGradient? {
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        return CGGradient(colorsSpace: space, colors: stops.map(\.color.cgColor) as CFArray,
+                          locations: stops.map { CGFloat($0.offset) })
+    }
 }
 
 extension Path {
