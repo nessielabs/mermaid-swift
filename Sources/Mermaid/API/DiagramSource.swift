@@ -12,6 +12,9 @@ struct DiagramSource: Sendable {
     /// The line number the body text starts at.
     var textStartLine: Int
     var accessibility: Accessibility
+    /// Merged front matter and directive configuration, for the few grammars
+    /// whose meaning depends on it (a git graph's `mainBranchName`).
+    var config: ConfigValue = .object([:])
 
     /// The text after the header keyword on the header line.
     var headerArguments: String {
@@ -47,6 +50,7 @@ struct DiagramSource: Sendable {
             i += 1
         }
         self.accessibility = accessibility
+        config = prepared.config
         text = bodyLines.joined(separator: "\n")
         textStartLine = 1
         lines = SourceLine.split(text)
