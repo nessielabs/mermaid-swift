@@ -52,7 +52,7 @@ struct C4RelationshipRenderer {
             }
             // Explicit offsets were tuned for mermaid.js's layout; they are
             // honored unless they would bury the label in an element.
-            var candidates = geometry.labelCandidates()
+            var candidates = geometry.labelCandidates(size: label.size)
             if rel.offsetX != nil || rel.offsetY != nil {
                 candidates.insert(geometry.point(at: 0.5) + Point(rel.offsetX ?? 0, rel.offsetY ?? 0), at: 0)
             }
@@ -147,8 +147,18 @@ private struct RelationshipGeometry {
     }
 
     /// Label positions to try, from the middle outward.
-    func labelCandidates() -> [Point] {
-        [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78].map(point(at:))
+    /// On-line positions come first unless the label would hide most of a
+    /// short line; then positions beside the middle of the line lead.
+    func labelCandidates(size: Size) -> [Point] {
+        let along = [0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78].map(point(at:))
+        let d = (end - start).normalized
+        let normal = Point(-d.y, d.x)
+        // Half the label's extent across the line, plus a small gap.
+        let across = abs(normal.x) * size.width / 2 + abs(normal.y) * size.height / 2 + 4
+        let middle = point(at: 0.5)
+        let beside = [middle + normal * across, middle - normal * across]
+        let extent = abs(d.x) * size.width + abs(d.y) * size.height
+        return extent > 0.6 * start.distance(to: end) ? beside + along : along + beside
     }
 }
 
