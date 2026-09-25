@@ -82,7 +82,7 @@ public struct ElementStyle: Hashable, Sendable {
             switch c {
             case "(": depth += 1; current.append(c)
             case ")": depth -= 1; current.append(c)
-            case ",", ";" where depth == 0:
+            case "," where depth == 0, ";" where depth == 0:
                 parts.append(current)
                 current = ""
             default: current.append(c)
