@@ -1,3 +1,5 @@
+import Foundation
+
 extension SceneItem {
     /// The box covering the item's paths (including half their stroke
     /// width) and text frames. Curve control points count, so the box may be
@@ -10,7 +12,11 @@ extension SceneItem {
             let half = (shape.stroke?.width ?? 0) / 2
             return box.insetBy(dx: -half, dy: -half)
         case .text(let text):
-            return text.frame
+            guard text.rotation != 0 else { return text.frame }
+            let angle = text.rotation * .pi / 180
+            let w = abs(text.frame.width * cos(angle)) + abs(text.frame.height * sin(angle))
+            let h = abs(text.frame.width * sin(angle)) + abs(text.frame.height * cos(angle))
+            return Rect(center: text.frame.center, size: Size(w, h))
         case .group(let group):
             return Self.bounds(of: group.items)
         }
@@ -22,4 +28,9 @@ extension SceneItem {
         guard let first = boxes.first else { return nil }
         return boxes.dropFirst().reduce(first) { $0.union($1) }
     }
+}
+
+extension SceneItem {
+    /// Transitional name for `bounds`.
+    var inkBounds: Rect? { bounds }
 }
