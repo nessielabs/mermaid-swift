@@ -3,6 +3,8 @@ import Testing
 
 @Suite("Kanban")
 struct KanbanTests {
+    let context = RenderContext(measurer: ApproximateTextMeasurer())
+
     func parse(_ body: String) throws -> KanbanDiagram {
         let prepared = try Preprocessor.prepare("kanban\n" + body)
         return try KanbanParser.parse(DiagramSource(prepared: prepared, header: prepared.header!))
@@ -79,5 +81,39 @@ struct KanbanTests {
             let error = try #require(throws: MermaidError.self, "\(body)") { try parse(body) }
             #expect(error.location == SourceLocation(line: line, column: column), "\(body): \(error)")
         }
+    }
+
+    @Test func layoutStacksCardsInsideSideBySideColumns() throws {
+        let layout = KanbanLayout.compute(try parse(board), context: context)
+        let columns = layout.columns
+        #expect(zip(columns, columns.dropFirst()).allSatisfy { $0.frame.maxX < $1.frame.minX })
+        #expect(columns.allSatisfy { $0.frame.minY == 0 && $0.frame.width == 200 })
+        for column in columns {
+            #expect(column.titleFrame.maxY <= (column.cards.first?.frame.minY ?? .infinity))
+            for card in column.cards {
+                #expect(column.frame.insetBy(dx: 1, dy: 1).contains(card.frame.origin))
+                #expect(card.frame.maxY < column.frame.maxY && card.frame.maxX < column.frame.maxX)
+                #expect(card.frame.contains(card.labelFrame.center))
+                if let ticket = card.ticketFrame, let assigned = card.assignedFrame {
+                    #expect(ticket.maxX < assigned.minX && ticket.minY >= card.labelFrame.maxY)
+                    #expect(assigned.maxY <= card.frame.maxY)
+                }
+            }
+            #expect(zip(column.cards, column.cards.dropFirst()).allSatisfy { $0.frame.maxY < $1.frame.minY })
+        }
+    }
+
+    @Test func configuredColumnWidthAndColors() throws {
+        var wide = context
+        wide.config = .object(["kanban": .object(["sectionWidth": .number(260)])])
+        #expect(KanbanLayout.compute(try parse(board), context: wide).columns[0].frame.width == 260)
+        #expect(KanbanDiagram.columnColor(0, theme: .default) == Theme.default.scaleColor(2).lightened(10))
+        #expect(KanbanDiagram.color(for: .medium) == nil && KanbanDiagram.color(for: .veryHigh) == Color(hex: 0xFF0000))
+    }
+
+    @Test func rendersThroughTheRegistry() throws {
+        #expect(Mermaid.detectType("kanban\n  todo") == .kanban)
+        let scene = try Mermaid.render("kanban\n" + board, options: RenderOptions(measurer: ApproximateTextMeasurer()))
+        #expect(scene.svg.contains(">MC-2038</text>") && scene.svg.contains(">Ready for test</text>"))
     }
 }
