@@ -185,4 +185,16 @@ struct LayeredLayoutTests {
         #expect(bends.count >= 6)
         #expect(Set(bends.map { ($0.x * 100).rounded() }).count == 1)
     }
+
+    @Test func edgesRunStraightThroughTheirLabels() {
+        // The route keeps its bends' shared column through a label when that
+        // column crosses the label, instead of jogging to the label's center.
+        #expect(LayeredComputation.lineX(throughLabelAt: 200, width: 180, neighborColumns: [150, 150]) == 150)
+        #expect(LayeredComputation.lineX(throughLabelAt: 200, width: 180, neighborColumns: [150]) == 150)
+        // Outside the label (with a margin), or with neighbors in different
+        // columns, the route goes through the label's center.
+        #expect(LayeredComputation.lineX(throughLabelAt: 200, width: 180, neighborColumns: [100]) == 200)
+        #expect(LayeredComputation.lineX(throughLabelAt: 200, width: 180, neighborColumns: [150, 170]) == 200)
+        #expect(LayeredComputation.lineX(throughLabelAt: 200, width: 180, neighborColumns: []) == 200)
+    }
 }
