@@ -26,6 +26,11 @@ enum Preprocessor {
         if let (front, range) = try extractFrontMatter(lines) {
             title = front["title"]?.stringValue
             if let frontConfig = front["config"] { config = config.merging(frontConfig) }
+            // mermaid.js also accepts gantt's `displayMode` at the top level
+            // of the front matter.
+            if let mode = front["displayMode"]?.stringValue, config["gantt"]?["displayMode"] == nil {
+                config = config.merging(.object(["gantt": .object(["displayMode": .string(mode)])]))
+            }
             for i in range { lines[i] = "" }
         }
         for directive in try extractDirectives(&lines) {

@@ -73,4 +73,11 @@ struct PreprocessorTests {
     @Test func configNumbersAcceptPixelSuffix() {
         #expect(ConfigValue.string("16px").numberValue == 16)
     }
+
+    @Test func topLevelDisplayModeConfiguresGantt() throws {
+        let prepared = try Preprocessor.prepare("---\ndisplayMode: compact\n---\ngantt\n")
+        #expect(prepared.config["gantt"]?["displayMode"] == .string("compact"))
+        let explicit = try Preprocessor.prepare("---\ndisplayMode: compact\nconfig:\n  gantt:\n    displayMode: standard\n---\ngantt\n")
+        #expect(explicit.config["gantt"]?["displayMode"] == .string("standard"))
+    }
 }
