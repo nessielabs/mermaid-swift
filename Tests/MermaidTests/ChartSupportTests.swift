@@ -68,4 +68,17 @@ struct ChartSupportTests {
         #expect(context.themeColor("xyChart", "titleColor", default: .black) == Color(hex: 0x00FF00))
         #expect(context.themeColor("xyChart", "lineColor", default: .white) == .white)
     }
+
+    @Test func everyChartKeywordIsRegistered() {
+        let headers: [(String, DiagramType)] = [
+            ("pie", .pie), ("quadrantChart", .quadrantChart), ("xychart", .xyChart), ("xychart-beta horizontal", .xyChart),
+            ("radar-beta", .radar), ("radar-beta:", .radar), ("radar", .radar), ("sankey", .sankey), ("sankey-beta", .sankey),
+        ]
+        for (header, type) in headers {
+            #expect(Mermaid.detectType(header + "\n") == type, "\(header)")
+        }
+        for type in [DiagramType.pie, .quadrantChart, .xyChart, .radar, .sankey] {
+            #expect(Mermaid.supportedTypes.contains(type))
+        }
+    }
 }
