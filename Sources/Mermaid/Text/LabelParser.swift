@@ -69,10 +69,11 @@ public enum LabelParser {
         var style = RichText.Span("")
         var index = text.startIndex
         while index < text.endIndex {
-            if text[index] == "<", let close = text[index...].firstIndex(of: ">") {
-                let tag = text[text.index(after: index)..<close].trimmingWhitespace().lowercased()
+            if text[index] == "<", let close = text[index...].firstIndex(of: ">"),
+               case let tag = text[text.index(after: index)..<close].lowercased(),
+               case let name = String(tag.drop { $0 == "/" }.prefix { $0.isLetter }),
+               Self.htmlTags.contains(name) {
                 let isClosing = tag.hasPrefix("/")
-                let name = tag.drop { $0 == "/" }.prefix { $0.isLetter }
                 switch name {
                 case "br": lines.append([])
                 case "b", "strong": style.bold = !isClosing
@@ -80,12 +81,7 @@ public enum LabelParser {
                 case "s", "del", "strike": style.strikethrough = !isClosing
                 case "code": style.code = !isClosing
                 case "p", "div": if isClosing { lines.append([]) }
-                default:
-                    guard !name.isEmpty else {
-                        append("<", to: &lines, style: style)
-                        index = text.index(after: index)
-                        continue
-                    }
+                default: break
                 }
                 index = text.index(after: close)
                 continue
@@ -101,6 +97,12 @@ public enum LabelParser {
         }
         return RichText(lines: trimBlankEdges(lines))
     }
+
+    /// Tag names treated as markup; anything else after `<` is literal text.
+    private static let htmlTags: Set<String> = [
+        "a", "abbr", "b", "big", "br", "code", "del", "div", "em", "font", "i", "img", "ins", "kbd",
+        "mark", "p", "q", "s", "small", "span", "strike", "strong", "sub", "sup", "u",
+    ]
 
     private static func append(_ text: String, to lines: inout [RichText.Line], style: RichText.Span) {
         var span = style
