@@ -1,6 +1,7 @@
 extension LayeredLayout {
     /// Lays out a graph in layers along its direction.
     public static func compute(_ graph: LayeredGraph) -> LayeredLayout {
+        if let collapsed = layoutCollapsingDirectedClusters(graph) { return collapsed }
         var computation = LayeredComputation(graph)
         return computation.run()
     }
