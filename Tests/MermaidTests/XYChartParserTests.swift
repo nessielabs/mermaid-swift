@@ -17,7 +17,7 @@ struct XYChartParserTests {
             bar [5000, 6000, 7500, 8200]
             line [5000, 6000, 7500, 8200]
         """)
-        #expect(d.orientation == .vertical)
+        #expect(d.orientation == nil)
         #expect(d.title == "Sales Revenue")
         #expect(d.xAxis == .categories(["jan", "feb", "mar", "apr 24"]))
         #expect(d.xAxisTitle == nil)

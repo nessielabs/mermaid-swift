@@ -47,7 +47,9 @@ public struct XYChartDiagram: Sendable {
 
     public static let type = DiagramType.xyChart
 
-    public var orientation = Orientation.vertical
+    /// The orientation from the header; `xyChart.chartOrientation`
+    /// configuration decides when the header names none.
+    public var orientation: Orientation?
     public var title: String?
     public var xAxisTitle: String?
     public var xAxis: XAxisData?
