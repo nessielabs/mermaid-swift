@@ -52,6 +52,10 @@ struct RadarParserTests {
     @Test func commentsAndHeaderStatements() throws {
         let d = try parse("radar-beta : title Inline\n axis a %% comment\n curve c{1} %% another")
         #expect(d.title == "Inline" && d.axes.count == 1 && d.curves.count == 1)
+        let error = try #require(throws: MermaidError.self) { try parse("radar-beta spokes 3") }
+        #expect(error.location == SourceLocation(line: 1, column: 12))
+        let colon = try #require(throws: MermaidError.self) { try parse("radar-beta: spokes 3") }
+        #expect(colon.location == SourceLocation(line: 1, column: 13))
     }
 
     @Test func referenceErrorsAreLocated() throws {

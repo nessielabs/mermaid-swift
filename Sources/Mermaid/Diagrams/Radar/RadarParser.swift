@@ -26,10 +26,10 @@ struct RadarParser {
         // `radar-beta:` and `radar-beta :` are both valid headers; anything
         // else on the header line is parsed as statements.
         var header = source.headerArguments
-        let offset = source.header.text.count - header.count
-        if header.hasPrefix(":") { header = String(header.dropFirst()) }
+        var offset = source.header.text.count - header.count
+        if header.hasPrefix(":") { header = String(header.dropFirst()); offset += 1 }
         if !header.trimmingWhitespace().isEmpty {
-            var headerParser = RadarParser(scanner: Scanner(header, at: source.header.location(atOffset: offset + 1)))
+            var headerParser = RadarParser(scanner: Scanner(header, at: source.header.location(atOffset: offset)))
             try headerParser.run()
             parser.diagram = headerParser.diagram
             parser.pending = headerParser.pending
