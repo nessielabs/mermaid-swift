@@ -27,7 +27,7 @@ enum EdgeGeometry {
         var points = route
         guard points.count >= 2 else { return points }
         if let target, let outline = Rect.bounding(target) {
-            while points.count > 2, outline.contains(points[points.count - 2]), inside(points[points.count - 2], target) {
+            while points.count > 2, outline.contains(points[points.count - 2]), strictlyInside(points[points.count - 2], target) {
                 points.remove(at: points.count - 2)
             }
             if let hit = intersection(from: points[points.count - 2], to: points[points.count - 1], polygon: target)
@@ -36,7 +36,7 @@ enum EdgeGeometry {
             }
         }
         if let source, let outline = Rect.bounding(source) {
-            while points.count > 2, outline.contains(points[1]), inside(points[1], source) {
+            while points.count > 2, outline.contains(points[1]), strictlyInside(points[1], source) {
                 points.remove(at: 1)
             }
             if let hit = intersection(from: points[1], to: points[0], polygon: source)
@@ -45,6 +45,20 @@ enum EdgeGeometry {
             }
         }
         return points
+    }
+
+    /// Whether `p` is inside `polygon` and not on its outline. Route ports
+    /// sit exactly on the outline of the tallest node in a rank; they must
+    /// survive clipping or the edge cuts diagonally to the node's corner.
+    static func strictlyInside(_ p: Point, _ polygon: [Point], tolerance: Double = 0.5) -> Bool {
+        guard inside(p, polygon) else { return false }
+        for (i, a) in polygon.enumerated() {
+            let b = polygon[(i + 1) % polygon.count], ab = b - a
+            let lengthSquared = ab.x * ab.x + ab.y * ab.y
+            let t = lengthSquared > 0 ? max(0, min(1, ((p.x - a.x) * ab.x + (p.y - a.y) * ab.y) / lengthSquared)) : 0
+            if p.distance(to: a + ab * t) <= tolerance { return false }
+        }
+        return true
     }
 
     /// Even-odd point-in-polygon test.
