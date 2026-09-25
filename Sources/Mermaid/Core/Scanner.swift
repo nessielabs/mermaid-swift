@@ -74,7 +74,7 @@ struct Scanner {
     /// identifier character, so `end` does not match the start of `endpoint`.
     mutating func consumeKeyword(_ word: String, caseInsensitive: Bool = true) -> Bool {
         guard hasPrefix(word, caseInsensitive: caseInsensitive) else { return false }
-        if let next = peek(word.count), next.isIdentifierContinuation { return false }
+        if let next = peek(word.count), next.isWordCharacter { return false }
         advance(by: word.count)
         return true
     }
@@ -116,8 +116,7 @@ struct Scanner {
 }
 
 extension Character {
-    /// Characters that may continue a Mermaid identifier.
-    var isIdentifierContinuation: Bool {
-        isLetter || isNumber || self == "_" || self == "-" || self == "." || self == ":"
-    }
+    /// Letters, digits, and underscores: the characters that make up a word
+    /// for keyword-boundary purposes.
+    var isWordCharacter: Bool { isLetter || isNumber || self == "_" }
 }
