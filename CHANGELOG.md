@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. The project
 follows [Semantic Versioning](https://semver.org).
 
+## 0.1.4
+
+- Project files for open source: security policy, changelog, issue and
+  pull request templates.
+- Test fixtures use neutral example content.
+
 ## 0.1.3
 
 - Edges run straight through their labels when their column crosses the
