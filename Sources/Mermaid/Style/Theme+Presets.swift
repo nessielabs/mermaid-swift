@@ -74,12 +74,36 @@ extension Theme {
             case .dark, .neutral: return v("cScale\(i)", base)
             }
         }
-        let pieSpec: [(Color, Double, Double)] = [
-            (primary, 0, 0), (secondary, 0, 0), (tertiary, 0, 0),
-            (primary, 0, -10), (secondary, 0, -10), (tertiary, 0, -10),
-            (primary, 60, -10), (primary, -60, -10), (primary, 120, 0),
-            (primary, 60, -20), (primary, -60, -20), (primary, 120, -10),
-        ]
+        // Each mermaid.js theme derives its pie palette differently: the
+        // dark and neutral themes reuse the section scale (pie12 wraps to
+        // cScale0), the others adjust hue and lightness.
+        let pieSpec: [(Color, Double, Double)]
+        switch name {
+        case .default:
+            pieSpec = [
+                (primary, 0, 0), (secondary, 0, 0), (tertiary, 0, -40),
+                (primary, 0, -10), (secondary, 0, -30), (tertiary, 0, -20),
+                (primary, 60, -20), (primary, -60, -40), (primary, 120, -40),
+                (primary, 60, -40), (primary, -90, -40), (primary, 120, -30),
+            ]
+        case .forest:
+            pieSpec = [
+                (primary, 0, 0), (secondary, 0, 0), (tertiary, 0, 0),
+                (primary, 0, -30), (secondary, 0, -30), (tertiary, 40, -40),
+                (primary, 60, -10), (primary, -60, -10), (primary, 120, 0),
+                (primary, 60, -50), (primary, -60, -50), (primary, 120, -50),
+            ]
+        case .dark, .neutral:
+            let sections = sectionColors
+            pieSpec = (1...12).map { (sections[$0 % sections.count], 0, 0) }
+        case .base:
+            pieSpec = [
+                (primary, 0, 0), (secondary, 0, 0), (tertiary, 0, 0),
+                (primary, 0, -10), (secondary, 0, -10), (tertiary, 0, -10),
+                (primary, 60, -10), (primary, -60, -10), (primary, 120, 0),
+                (primary, 60, -20), (primary, -60, -20), (primary, 120, -10),
+            ]
+        }
         pieColors = pieSpec.enumerated().map { i, spec in
             v("pie\(i + 1)", spec.0.adjusted(hue: spec.1, lightness: spec.2))
         }

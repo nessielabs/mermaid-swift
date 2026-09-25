@@ -56,6 +56,16 @@ struct ThemeTests {
         #expect(Theme.neutral.scaleInverseColor(7) == .black)
     }
 
+    @Test func piePalettesFollowEachTheme() {
+        let theme = Theme.default
+        #expect(theme.pieColors[1] == theme.secondaryColor)
+        #expect(theme.pieColors[2] == theme.tertiaryColor.adjusted(lightness: -40))
+        #expect(theme.pieColors[7] == theme.primaryColor.adjusted(hue: -60, lightness: -40))
+        #expect(Theme.dark.pieColors[0] == Theme.dark.sectionColors[1])
+        #expect(Theme.neutral.pieColors[11] == Theme.neutral.sectionColors[0])
+        #expect(Theme(.default, variables: ["pie3": "#123456"]).pieColors[2] == Color(css: "#123456"))
+    }
+
     @Test func darkThemeUsesLightLines() {
         #expect(Theme.dark.background.isDark)
         #expect(!Theme.dark.lineColor.isDark)
