@@ -39,6 +39,7 @@ extension LayeredEngine {
         }
         layers = best
         setOrders(layers)
+        transpose(&layers, up: up, down: down)
         if !clusterParent.isEmpty {
             // Give each long edge one key for all its ranks, so its order
             // relative to cluster blocks agrees in every rank.
@@ -59,6 +60,42 @@ extension LayeredEngine {
             setOrders(layers)
         }
         return layers
+    }
+
+    /// Swaps neighbors within the same cluster block whenever that reduces
+    /// their crossings with both adjacent ranks, repeating until stable.
+    private mutating func transpose(_ layers: inout [[Int]], up: [[(Int, Double)]], down: [[(Int, Double)]]) {
+        func crossings(_ u: Int, _ v: Int) -> Double {
+            var total = 0.0
+            for neighbors in [up, down] {
+                for (a, wa) in neighbors[u] {
+                    for (b, wb) in neighbors[v] where vertices[a].order > vertices[b].order {
+                        total += wa * wb
+                    }
+                }
+            }
+            return total
+        }
+        var improved = true
+        var passes = 0
+        while improved, passes < 8 {
+            improved = false
+            passes += 1
+            for r in layers.indices where layers[r].count > 1 {
+                for i in 0..<(layers[r].count - 1) {
+                    let u = layers[r][i], v = layers[r][i + 1]
+                    if case .border = vertices[u].kind { continue }
+                    if case .border = vertices[v].kind { continue }
+                    guard vertices[u].cluster == vertices[v].cluster else { continue }
+                    if crossings(v, u) < crossings(u, v) {
+                        layers[r].swapAt(i, i + 1)
+                        vertices[u].order = i + 1
+                        vertices[v].order = i
+                        improved = true
+                    }
+                }
+            }
+        }
     }
 
     private func chainEdge(_ v: Int) -> Int? {
