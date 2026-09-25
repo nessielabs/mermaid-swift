@@ -120,3 +120,19 @@ struct DayjsFormatTests {
         #expect(DayjsFormat.isoWeek(civil(2024, 6, 15).components) == (2024, 24))
     }
 }
+
+@Suite("Gantt time: strftime")
+struct StrftimeFormatTests {
+    @Test func formatsD3Directives() {
+        let date = civil(2024, 1, 7, 15, 4, 5, 60)
+        #expect(StrftimeFormat("%Y-%m-%d").format(date) == "2024-01-07")
+        #expect(StrftimeFormat("%a %A %b %B").format(date) == "Sun Sunday Jan January")
+        #expect(StrftimeFormat("%H:%M:%S.%L %I%p").format(date) == "15:04:05.060 03PM")
+        #expect(StrftimeFormat("[%e] %j %y %w %u").format(date) == "[ 7] 007 24 0 7")
+        #expect(StrftimeFormat("%U %W %V %q").format(date) == "01 01 01 1")
+        #expect(StrftimeFormat("%-d/%-m %_H %%").format(date) == "7/1 15 %")
+        #expect(StrftimeFormat("%x %X").format(date) == "1/7/2024 3:04:05 PM")
+        #expect(StrftimeFormat("%s %Q").format(civil(1970, 1, 2)) == "86400 86400000")
+        #expect(StrftimeFormat("%k").format(date) == "%k")
+    }
+}
